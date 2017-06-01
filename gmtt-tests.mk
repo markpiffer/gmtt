@@ -226,13 +226,25 @@ $(call _gmtt-test,$$(call fill-up,0x1234,0x10000),0xffff)
 $(call _gmtt-test,$$(call fill-up,0x123456,0),0xffffff)
 
 define test-tbl =
+3
 x1-y2 x2-y2 x3-y2
 x1-y1 x2-y1 x3-y1
 x1-y3 x2-y3 x3-y3
 endef
 
-$(call _gmtt-test,$$(call sort-tbl,$$(test-tbl),3,$$$$1),x1-y1 x2-y1 x3-y1 x1-y2 x2-y2 x3-y2 x1-y3 x2-y3 x3-y3)
-$(call _gmtt-test,$$(call rsort-tbl,$$(test-tbl),3,$$$$1),x1-y3 x2-y3 x3-y3 x1-y2 x2-y2 x3-y2 x1-y1 x2-y1 x3-y1)
+$(call _gmtt-test,$$(call sort-tbl,$$(test-tbl),$$$$1),3 x1-y1 x2-y1 x3-y1 x1-y2 x2-y2 x3-y2 x1-y3 x2-y3 x3-y3)
+$(call _gmtt-test,$$(call rsort-tbl,$$(test-tbl),$$$$1),3 x1-y3 x2-y3 x3-y3 x1-y2 x2-y2 x3-y2 x1-y1 x2-y1 x3-y1)
+$(call _gmtt-test,$$(call select,$$(test-tbl),3 1 2,$$$$(call str-eq,$$$$1,x1-y3)),x3-y3 x1-y3 x2-y3)
+
+define test-tbl =
+4
+foo bar baz 11
+foo bar baf 22
+faa bar baz 33
+endef
+
+$(call _gmtt-test,$$(call select,$$(test-tbl),3 1 2 3,$$$$(call str-match,$$$$1,%oo)),baz foo bar baz baf foo bar baf)
+$(call _gmtt-test,$$(call map-select,$$(test-tbl),4 1 2 3,$$$$(call str-match,$$$$1,%oo),$$$$(call mul,0x2,$$$$1) this:$$$$2 that:$$$$3 $$$$4),0x16 this:foo that:bar baz 0x2c this:foo that:bar baf)
 
 $(info Tests finished.)
 

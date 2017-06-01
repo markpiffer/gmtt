@@ -684,7 +684,7 @@ _log2-zeros = $(__gmtt-dbg-args)$(wordlist 2,$(call log2,$1),$(_all-0))
 ######################################################################
 # Generate a decimal index for the list. The index is a list of decimal
 # literals starting from 0 counting upwards and has as many digits as
-# necessary to cove the range of elements.
+# necessary to cover the range of elements.
 # $1 - list
 # $2 - prefix string
 # Example: index(a b c d e f..) -->  00 01 02 03 04 05 06 07 08 09 10 11 ..
@@ -723,28 +723,27 @@ _rsort-ix = $(__gmtt-dbg-args)$(call rev-list,$(call _sort-ix,$1,$2))
 ######################################################################
 # Sort a table by lines.
 # $1 - table
-# $2 - table width
-# $3 - keygenerator function (takes one table line as parameters $1,$2,$3,etc.
-sort-tbl = $(call _sort-tbl,$(strip $1),$2,$3)
-_sort-tbl = $(__gmtt-dbg-args)$(call _reorder-tbl,$1,$2,$(call _sort-ix,$(foreach params,$(call _chop-rec,$1,$2),$(call lambda,$3,$(params))),$2))
+# $2 - keygenerator function (takes one table line as parameters $1,$2,$3,etc.
+sort-tbl = $(__gmtt-dbg-args)$(call _sort-tbl,$(strip $1),$2)
+_sort-tbl = $(__gmtt-dbg-args)$(call __sort-tbl,$(wordlist 2,$(tbl-limit),$1),$(firstword $1),$2)
+__sort-tbl = $(__gmtt-dbg-args)$2 $(call _reorder-tbl,$1,$2,$(call _sort-ix,$(foreach params,$(call _chop-rec,$1,$2),$(call lambda,$3,$(params))),$2))
 
 ######################################################################
 # Reverse sort a table by lines.
 # $1 - table
-# $2 - table width
-# $3 - keygenerator function (takes one table line as parameters $1,$2,$3,etc.
-rsort-tbl = $(call _rsort-tbl,$(strip $1),$2,$3)
-_rsort-tbl = $(__gmtt-dbg-args)$(call _reorder-tbl,$1,$2,$(call _rsort-ix,$(foreach params,$(call _chop-rec,$1,$2),$(call lambda,$3,$(params))),$2))
+# $2 - keygenerator function (takes one table line as parameters $1,$2,$3,etc.
+rsort-tbl = $(__gmtt-dbg-args)$(call _rsort-tbl,$(strip $1),$2)
+_rsort-tbl = $(__gmtt-dbg-args)$(call __rsort-tbl,$(wordlist 2,$(tbl-limit),$1),$(firstword $1),$2)
+__rsort-tbl = $(__gmtt-dbg-args)$2 $(call _reorder-tbl,$1,$2,$(call _rsort-ix,$(foreach params,$(call _chop-rec,$1,$2),$(call lambda,$3,$(params))),$2))
 
 ######################################################################
 # Print (or do sg. else) with a table
 # $1 - table
-# $2 - table width
-# $3 - output function (takes one table line as parameters $1,$2,$3,etc.
-print-tbl = $(call _print-tbl,$(strip $1),$2,$3)
-_print-tbl = $(__gmtt-dbg-args)$(call __print-tbl,$(call _chop-rec,$1,$2),$3)
-__print-tbl = $(if $1,$(call lambda,$2,$(firstword $1))$(call __print-tbl,$(wordlist 2,$(tbl-limit),$1),$2))
-
+# $2 - output function (takes one table line as parameters $1,$2,$3,etc.
+print-tbl = $(__gmtt-dbg-args)$(call _print-tbl,$(strip $1),$2)
+_print-tbl = $(__gmtt-dbg-args)$(call __print-tbl,$(wordlist 2,$(tbl-limit),$1),$(firstword $1),$2)
+__print-tbl = $(__gmtt-dbg-args)$(call ___print-tbl,$(call _chop-rec,$1,$2),$3)
+___print-tbl = $(if $1,$(call lambda,$2,$(firstword $1))$(call ___print-tbl,$(wordlist 2,$(tbl-limit),$1),$2))
 
 
 ######################################################################
@@ -754,22 +753,24 @@ __print-tbl = $(if $1,$(call lambda,$2,$(firstword $1))$(call __print-tbl,$(word
 pick = $(foreach elem,$1,$(word $(elem),$2))
 
 ######################################################################
-# $1=table
-# $2=table-width + 1
-# $3=list of column numbers
-# $4="where-clause", function of $2 parameters returning true (non-null) or false (empty string)
+# $1 = table
+# $2 = list of column numbers
+# $3 = "where-clause", function of $2 parameters returning true (non-null) or false (empty string)
 # returns: a list of columns (selection in $3) from the rows in table $1 where condition $4 is non-null
-select = $(call _select,$1,$2,$3,$4,$(or $5,$(space)))
-_select = $(if $(firstword $1),$(if $(call $4,$(wordlist 1,$2,$1)),$5$(foreach i,$3,$(word $(i),$1)))$(call _select,$(wordlist $2,$(tbl-limit),$1),$2,$3,$4,$5))
+select = $(call _select,$(strip $1),$2,$3)
+_select = $(call __select,$(wordlist 2,$(tbl-limit),$1),$(firstword $1),$(call add,$(firstword $1),1),$2,$3)
+__select = $(if $1,$(if $(call lambda,$5,$(call list2param,$(wordlist 1,$2,$1))), $(call pick,$4,$1))$(call __select,$(wordlist $3,$(tbl-limit),$1),$2,$3,$4,$5))
+#___select = $(if $1,$(call lambda,$2,$(firstword $1))$(call ___print-tbl,$(wordlist 2,$(tbl-limit),$1),$2))
 
 ######################################################################
-# $1=a function which processes a list containing the selection from $3 on each iteration of the select
-# $2=table
-# $3=list of column numbers
-# $4="where-clause", function of $4 parameters returning true (non-null) or false (empty string)
-# $5=table-width
+# $1 = table
+# $2 = list of column numbers
+# $3 = "where-clause", function of $4 parameters returning true (non-null) or false (empty string)
+# $4 = a function which processes a list containing the selection from $3 on each iteration of the select
 # returns: a list of columns (selection in $2) from the rows in table $1 where condition $3 is non-null
-map-select=$(if $(call $4,$(wordlist 1,$5,$2)),$(call $1,$(call pick,$3,$(wordlist 1,$5,$2))))$(if $(wordlist $5,1000,$2),$(call map_select,$1,$(wordlist $5,1000,$2),$3,$4,$5))
+map-select = $(__gmtt-dbg-args)$(call _map-select,$(strip $1),$2,$3,$4)
+_map-select = $(call __map-select,$(wordlist 2,$(tbl-limit),$1),$(firstword $1),$(call add,$(firstword $1),1),$2,$3,$4)
+__map-select = $(if $1,$(if $(call lambda,$5,$(call list2param,$(wordlist 1,$2,$1))), $(call lambda,$6,$(call list2param,$(call pick,$4,$1))))$(call __map-select,$(wordlist $3,$(tbl-limit),$1),$2,$3,$4,$5,$6))
 
 
 
@@ -779,9 +780,10 @@ _gmtt-test = $(if $(call _compare-result,$(call lambda,$1),$2),$(info Ok: $1 = $
 #$(call _gmtt-test,$$(call fill-up,0x123456,0),0xfffff)
 
 # Performance measurement
-# cnt := 0 1 2 3 4 # 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 #0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 
+# cnt := 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 
 # __gmtt-dbg-args :=
-# #$(foreach i,$(cnt),$(foreach j,$(cnt),$(foreach k,$(cnt),$(eval foo := $(call mul,3234,3214)))))
-# $(foreach i,$(cnt),$(foreach j,$(cnt),$(foreach k,$(cnt),$(eval foo := $(call multiply,3234,3214)))))
+# li := $(call listN,X,1000)
+# #$(foreach i,$(cnt),$(foreach j,$(cnt),$(foreach k,$(cnt),$(eval foo := $(call pick,1 2 3 4,$(wordlist 2,10,$(li)))))))
+# $(foreach i,$(cnt),$(foreach j,$(cnt),$(foreach k,$(cnt),$(eval foo := $(call pick,1 2 3 4,$(li))))))
 # $(info $(foo))
 # $(error end)

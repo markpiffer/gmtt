@@ -106,6 +106,16 @@ str-match = $(if $(and $(strip $(patsubst $(strip $1),,$(strip $2))),$(strip $(p
 # $2 = length of wordlist
 _rev-list = $(if $1,$(call _rev-list,$(wordlist 2,$2,$1),$2) $(firstword $1))
 
+######################################################################
+# Add a ¤ (Character 164) and a unique binary number to all elements of a list
+# $1 = list
+# $2 = binary literal (needs 0 or any other as starting value)
+cat-sufx = $(if $1,$(firstword $1)¤$2 $(call cat-sufx,$(wordlist 2,999999,$1),$(call bincnt,$2)))
+
+######################################################################
+# Sort a list without dropping duplicates (built-in $(sort) will drop them)
+# $1 = list (elements must not contain ¤ (Character 164))
+sort-all = $(foreach i,$(sort $(call cat-sufx,$1,0)),$(firstword $(subst ¤, ,$(i))))
 
 ######################################################################
 # $1 = list to invert

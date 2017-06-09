@@ -16,14 +16,14 @@ gmtt is a collection of GNU make functions which among other things implement so
 - divide
 - modulus
 - log2
-- bitwise or (also for decimal numbers)
-- bitwise and (also for decimal numbers)
-- bitwise xor (also for decimal numbers)
-- bitwise not (also for decimal numbers)
+- bitwise or
+- bitwise and
+- bitwise xor
+- bitwise not
 - round up to a power of 2 (correct results only for powers of 2 as second operand)
 - round down to a power of 2 (correct results only for powers of 2 as second operand)
 
-All operations are supported for decimal, hexadecimal and octal numbers. The arithemtic range is currently ~64 places (don't exploit the maximum) but this limit can be set rather freely. Numbers are not fixed length (there is only an encapsulated internal representation) so will be fast if small and slow if long. The bases of all operands can be mixed freely but of course the perviously mentioned restrictions apply. The output base is decided by the base of the first operand: `$(call add,0x1,1)` will produce `0x2` but `$(call add,1,0x1)` will give `2`. Generally the module relies on well-formed numbers:
+All operations are supported for decimal, hexadecimal and octal numbers. The arithemtic range is currently ~64 places (don't exploit the maximum) but this limit can be set rather freely. Numbers are not fixed length (there is only an encapsulated internal representation which the user will never see) so they will be fast if small and slow if long. The bases of all operands can be mixed freely but of course the previously mentioned restrictions apply. The output base is decided by the base of the first operand: `$(call add,0x1,1)` will produce `0x2` but `$(call add,1,0x1)` will give `2`. Generally the module relies on well-formed numbers:
 
 * 0x1234 (a hexadecimal)
 * -000123 (a negative octal)
@@ -35,3 +35,8 @@ are all processed correctly, while
 * 12 34 (will produce garbage)
 
 are not.
+
+### Miscellaneous functions
+- sort with duplicates
+- string compares
+- explode/implode: take a string apart

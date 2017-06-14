@@ -9,9 +9,26 @@ Tables are just make lists (i.e. strings separated by whitespace) with a first e
 ```
 define test-tbl =
 3
-x1|y2  x2|y2  x3|y2
 x1|y1  x2|y1  x3|y1
+x1|y2  x2|y2  x3|y2
 x1|y3  x2|y3  x3|y3
+endef
+```
+There are some obvious restrictions on tables: as make doesn't recognize string delimiters ("" etc.) there is no way to have spaces inside one cell:
+```
+define illegal-table-there-are-no-strings-in-make = 
+2
+"This table has 4 rows really!"  x2|y1  
+endef
+```
+
+Also, as there is nothing like an empty string as member of a make list, we are also prohibited of using empty cells in a table. You will have to supply a string that denotes "nothing" and that will not get in your way further down the processing line. Here is an example where it is assumed that C-style comments don't harm 
+```
+define table-with-empty-cells =
+3
+x1|y1      x2|y1       x3|y1
+x1|y2    /*void*/      x3|y2
+/*void*/   x2|y3       x3|y3
 endef
 ```
 

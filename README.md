@@ -5,7 +5,7 @@ The GNU make table toolkit
 gmtt is a collection of GNU make functions which among other things implement sorting and searching in tabular data. The intention is to manage build configuration data (like memory ranges, interrupt vectors in embedded system bootloaders and so on) in a way that doesn't force you out to the shell. This has the additional benfit that you may get away with easier portability between Unix and Windows.
 
 ### Tables
-Tables are just make lists (i.e. strings separated by whitespace) with a first element which denotes the table width (number of colons) by a decimal number: `3 tic tac toe` is a table, while `alpha beta gamma` is not. Of course tables can (and usually will) be written as multi-line defines:
+make has only one complex data type: list. make lists are just sequences of non-empty strings separated by whitespace characters (space, tab, linefeed). Thus tables are implemented as make lists with a first element denoting the table width (number of colons) as a decimal number: `3 tic tac toe` is a table, while `alpha beta gamma` is not. Of course tables can (and usually will) be written as multi-line defines:
 ```
 define test-tbl =
 3
@@ -14,7 +14,7 @@ x1|y2  x2|y2  x3|y2
 x1|y3  x2|y3  x3|y3
 endef
 ```
-There are some obvious restrictions on tables: as make doesn't recognize string delimiters ("" etc.) there is no way to have spaces inside one cell:
+There are some obvious restrictions on tables: make doesn't recognize string delimiters ("" etc.) so there is no way to have spaces inside one cell:
 ```
 define illegal-table-there-are-no-strings-in-make = 
 2
@@ -22,7 +22,7 @@ define illegal-table-there-are-no-strings-in-make =
 endef
 ```
 
-Also, as there is nothing like an empty string as member of a make list, we are also prohibited of using empty cells in a table. You will have to supply a string that denotes "nothing" and that will not get in your way further down the processing line. Here is an example where it is assumed that C-style comments don't harm 
+As there is nothing like an empty string as member of a make list, we are also prohibited of using empty cells in a table. You will have to supply a string that denotes "nothing" and that will not get in your way further down the processing line. Here is an example where it is assumed that C-style comments don't harm 
 ```
 define table-with-empty-cells =
 3
@@ -32,6 +32,7 @@ x1|y2    /*void*/      x3|y2
 endef
 ```
 
+#### Functions on tables
 - sort / reverse sort
 - select (with a 'where' clause, remotely comparable to SQL)
 - map (apply a function on each row)
@@ -51,6 +52,7 @@ are all processed correctly, while
 
 are not.
 
+#### Functions on numbers
 - add
 - subtract
 - multiply
@@ -61,8 +63,8 @@ are not.
 - bitwise and
 - bitwise xor
 - bitwise not
-- round up to a power of 2 (correct results only for powers of 2 as second operand)
-- round down to a power of 2 (correct results only for powers of 2 as second operand)
+- round up to a power of 2
+- round down to a power of 2
 
 
 ### Miscellaneous functions

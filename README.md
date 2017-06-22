@@ -80,7 +80,8 @@ are not.
  Return the index of the first occurrence of _word_ if present or the empty list.
  *Indexing starts at 0*, contrary to the make-internal behaviour of numbering lists from 1!
  Note that you can always have an index starting at 1 by prefixing the list at
- call time with the $(\_never-matching) element, i.e. `$(call index-of,
+ call time with the $(\_never-matching) element (or a simple underscore, if you are sure
+ that it is never a real element), i.e. `$(call index-of,
  $(_never-matching) foo bar baz,foo)` will give index 1.
  Examples:
  - `$(call index-of,foo bar baz,foo)` -> `0`

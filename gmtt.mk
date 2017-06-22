@@ -126,14 +126,38 @@ list2param = $(subst $(space),$(comma),$(strip $1))
 lambda = $(eval _lambda=$1)$(eval _lambda:=$$(call _lambda,$(call list2param,$2)))$(_lambda)
 format = $(lambda)
 
+_never-matching := ¥# character 165, this is used as a list element that should never appear as a real element
 
 ######################################################################
-#### $(call up-to,_list_,_word_)
-## Return first part of the list up to but excluding word. If word is
-## not in the list, the whole list is returned.
-## Example: `$(call up-to,foo bar baz baf,baz)' -> `foo bar'
-## `$(call up-to,foo bar baz,foo)' -> ` ' (empty list)
+##### $(call up-to,_list_,_word_)
+## Return first part of _list_ up to but excluding the first occurrence of _word_.
+## If _word_ is not in _list_, the whole list is returned.
+## Examples:
+## - `$(call up-to,foo bar baz,baz)` -> `foo bar`
+## - `$(call up-to,foo bar baz,foo)` -> ` ` (empty list)
 up-to = $(if $(findstring $2,$(firstword $1)),,$(strip $(subst ¤, ,$(firstword $(subst ¤$2¤, ,$(subst $(space),¤, $1 ))))))
+
+
+######################################################################
+##### $(call index-of,_list_,_word_)
+## Return the index of the first occurrence of _word_ if present or the empty list.
+## *Indexing starts at 0*, contrary to the make-internal behaviour of numbering lists from 1!
+## Note that you can always have an index starting at 1 by prefixing the list at
+## call time with the $(_never-matching) element, i.e. `$(call index-of,
+## $(_never-matching) foo bar baz,foo)` will give index 1.
+## Examples:
+## - `$(call index-of,foo bar baz,foo)` -> `0`
+index-of = $(if $(findstring $2,$1),$(words $(call up-to,$1,$2)))
+
+######################################################################
+##### $(call from-on,_list_,_word_)
+## Return the portion of _list_ following the first occurrence of _word_.
+## If _word_ is not in _list_, the empty string/list is returned.
+## Examples:
+## - `$(call from-on,foo bar baz,foo)` -> `bar baz`
+## - `$(call from-on,foo bar baz,baz)` -> ` ` (empty list)
+from-on = $(strip $(wordlist $(or $(call index-of,$(_never-matching) $(_never-matching) $1,$2),999999),999999,$1))
+
 
 ######################################################################
 # $1 filename

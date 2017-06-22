@@ -126,6 +126,15 @@ list2param = $(subst $(space),$(comma),$(strip $1))
 lambda = $(eval _lambda=$1)$(eval _lambda:=$$(call _lambda,$(call list2param,$2)))$(_lambda)
 format = $(lambda)
 
+
+######################################################################
+#### $(call up-to,_list_,_word_)
+## Return first part of the list up to but excluding word. If word is
+## not in the list, the whole list is returned.
+## Example: `$(call up-to,foo bar baz baf,baz)' -> `foo bar'
+## `$(call up-to,foo bar baz,foo)' -> ` ' (empty list)
+up-to = $(if $(findstring $2,$(firstword $1)),,$(strip $(subst ¤, ,$(firstword $(subst ¤$2¤, ,$(subst $(space),¤, $1 ))))))
+
 ######################################################################
 # $1 filename
 # $2 dirname (all subdirectories will be searched too)

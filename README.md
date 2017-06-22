@@ -66,8 +66,19 @@ are not.
 - round up to a power of 2
 - round down to a power of 2
 
+### List functions
+
+#### $(call up-to,_list_,_word_)
+Return first part of the list up to but excluding word. If word is
+not in the list, the whole list is returned.
+Example: 
+- `$(call up-to,foo bar baz baf,baz)` -> `foo bar`
+- `$(call up-to,foo bar baz,foo)` -> ` ` (empty list)
+
+#### $(call sort-all,_list_)
+Sort the list without dropping duplicates like the internal `$(sort)`.
 
 ### Miscellaneous functions
-- sort with duplicates
 - string compares
 - explode/implode: take a string apart
+

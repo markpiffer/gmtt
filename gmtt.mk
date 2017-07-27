@@ -22,8 +22,13 @@ define newline :=
 $(strip)
 $(strip)
 endef
-hex_chars := 0 1 2 3 4 5 6 7 8 9 a b c d e f A B C D E F
-alnum_chars := _ 0 1 2 3 4 5 6 7 8 9 a b c d e f g h i j k l m n o p q r s t u v w x y z A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+[A-F] := A B C D E F#
+[a-f] := a b c d e f#
+[A-Z] := $([A-F]) G H I J K L M N O P Q R S T U V W X Y Z#
+[a-z] := $([a-f]) g h i j k l m n o p q r s t u v w x y z#
+[0-9] := 0 1 2 3 4 5 6 7 8 9#
+hex_chars := $([0-9]) $([a-f]) $([A-F])
+alnum_chars := _ $([0-9]) $([A-Z]) $([a-z])
 
 
 __gmtt-dbg-args = $(if $(__gmtt-dbg-info),$(info $0($(if $1$2$3$4$5$6,<$1>$(if $2$3$4$5$6,<$2>$(if $3$4$5$6,<$3>$(if $4$5$6,<$4>$(if $5$6,<$5>$(if $6,<$6>)))))))))
@@ -34,10 +39,10 @@ tbl-limit := 65000
 
 
 ######################################################################
-# Insert a blank after every occurrence of the substrings in the given string.
-# $1 = list of substrings (or single characters)
-# $2 = string to explode
-# Example: explode(a b c d e f,0deadbeef0) --> 0d e a d b e e f 0
+##### $(call explode,_stringlist_,_string_)
+## Insert a blank after every occurrence of the strings from _stringlist_ in _string_.
+## This function serves mainly to convert a string into a list.
+## Example: `$(call explode,0 1 2 3 4 5 6 7 8 9,0xl337c0de)` --> `0 x1 3 3 7 c0 de`
 explode = $(if $1,$(subst $(firstword $1),$(firstword $1) ,$(call explode,$(wordlist 2,255,$1),$2)),$2)
 
 ######################################################################

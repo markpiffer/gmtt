@@ -105,6 +105,6 @@ Sort the list without dropping duplicates like the internal `$(sort)`.
  Insert a blank after every occurrence of the strings from _stringlist_ in _string_.
  This function serves mainly to convert a string into a list.
  Examples: 
- - `$(call explode,0 1 2 3 4 5 6 7 8 9,0xl337c0de)` -> `0 xl3 3 7 c0 de`
+ - `$(call explode,0 1 2 3 4 5 6 7 8 9,0x1337c0de)` -> `0 x1 3 3 7 c0 de`
 
 

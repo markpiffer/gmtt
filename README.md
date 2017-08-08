@@ -66,45 +66,141 @@ are not.
 - round up to a power of 2
 - round down to a power of 2
 
-### List functions
-
-#### $(call up-to,_list_,_word_)
- Return first part of _list_ up to but excluding the first occurrence of _word_.
- If _word_ is not in _list_, the whole list is returned.
- Examples:
- - `$(call up-to,foo bar baz,baz)` -> `foo bar`
- - `$(call up-to,foo bar baz,foo)` -> ` ` (empty list)
-
-
-#### $(call index-of,_list_,_word_)
- Return the index of the first occurrence of _word_ if present or the empty list.
- *Indexing starts at 0*, contrary to the make-internal behaviour of numbering lists from 1!
- Note that you can always have an index starting at 1 by prefixing the list at
- call time with the $(\_never-matching) element (or a simple underscore, if you are sure
- that it is never a real element), i.e. `$(call index-of,
- $(_never-matching) foo bar baz,foo)` will give index 1.
- Examples:
- - `$(call index-of,foo bar baz,foo)` -> `0`
-
-#### $(call from-on,_list_,_word_)
- Return the portion of _list_ following the first occurrence of _word_.
- If _word_ is not in _list_, the empty string/list is returned.
- Examples:
- - `$(call from-on,foo bar baz,foo)` -> `bar baz`
- - `$(call from-on,foo bar baz,baz)` -> ` ` (empty list)
-
-
-#### $(call sort-all,_list_)
-Sort the list without dropping duplicates like the internal `$(sort)`.
-
-### Miscellaneous functions
-- string compares
-- explode/implode: take a string apart
+### Function List
 
 #### $(call explode,_stringlist_,_string_)
  Insert a blank after every occurrence of the strings from _stringlist_ in _string_.
  This function serves mainly to convert a string into a list.
- Examples: 
- - `$(call explode,0 1 2 3 4 5 6 7 8 9,0x1337c0de)` -> `0 x1 3 3 7 c0 de`
+ Example: `$(call explode,0 1 2 3 4 5 6 7 8 9,0x1337c0de)` --> `0 x1 3 3 7 c0 de`
 
+#### $(call implode,_string-with-spaces_)
+ Remove all spaces from the given string. Note that make is mostly unaware of escape
+ characters and therefore takes all spaces verbatim.
+ Example: `$(call implode,some\ awkward\ Windows\ path)` --> `some\awkward\Windows\path`
 
+#### $(call str-eq,_string1_,_string2_)
+ Compare two strings on equality. Strings are allowed to have blanks.
+ Return non-empty if string $1 and $2 are identical, empty string otherwise.
+ - `$(call str-eq,yes,no)` --> `` (empty string)
+ - `$(call str-eq,yes ,yes)` --> `` (empty string)
+ - `$(call str-eq,yes ,yes )`  --> `t`
+
+#### $(call str-le,_string1_,_string2_)
+ Compare two strings lexically for _string1_ less-or-equal _string2_.
+ Lexical ordering means that 'aa' < 'aaa' < 'aab' < 'ab'. The empty string
+ always compares smaller than any other string. The strings may contain spaces
+ but leading and trailing spaces are not considered in the comparison and
+ multiple interior spaces are substituted by a single one. Spaces compare
+ smaller than downcase characters but greater than upcase. In short: you
+ should know what you are doing if you have spaces inside your strings.
+ Examples:
+ - `$(call str-le,aaa,ab))` --> `t` 			     
+ - `$(call str-le,   ab aa,aa))` --> ``	(empty string)	     
+ - `$(call str-le,aa,aa))` --> `t`			     
+ - `$(call str-le,aa,a))` --> ``	(empty string)		     
+ - `$(call str-le,a,))` --> `` (empty string)			     
+ - `$(call str-le,,a))` --> `t`			     
+ - `$(call str-le,MacGyver John,Mac Gyver John))` --> `t`
+ - `$(call str-le,macgyver john,mac gyver john))` --> `` (empty string)
+
+#### $(call str-ge,_string1_,_string2_)
+ Compare two strings lexically for _string1_ greater-or-equal _string2_.
+ Lexical ordering means that 'aa' < 'aaa' < 'aab' < 'ab'. The empty string
+ always compares smaller than any other string. The strings may contain spaces
+ but leading and trailing spaces are not considered in the comparison and
+ multiple interior spaces are substituted by a single one. Spaces compare
+ smaller than downcase characters but greater than upcase. In short: you
+ should know what you are doing if you have spaces inside your strings.
+ Examples:
+ - `$(call str-ge,aaa,ab))` --> `` (empty string) 			     
+ - `$(call str-ge,   ab aa,aa))` --> `t`
+ - `$(call str-ge,aa,aa))` --> `t`			     
+ - `$(call str-ge,aa,a))` --> `t`
+ - `$(call str-ge,a,))` --> `t`			     
+ - `$(call str-ge,,a))` --> `` (empty string)			     
+ - `$(call str-ge,MacGyver John,Mac Gyver John))` --> `` (empty string)
+ - `$(call str-ge,macgyver john,mac gyver john))` --> `t`
+
+#### $(call str-match,_string1_,_string2_)
+ Compare two strings on equality under wildcard substitution. The wildcard
+ can appear in both of the strings.
+ Return t if _string1_ and _string2_ match where the first % is taken as
+ wildcard, return empty string otherwise. 
+ - `$(call str-match,Mickey%Mouse,Mickey Mouse))` --> `t`
+ - `$(call str-match,Mickey%,MickeyMouse))` --> `t`
+ - `$(call str-match,Mickey%,))` --> `` (empty string)
+ - `$(call str-match,Mickey %ouse,Mickey Mouse))` --> `t`
+ - `$(call str-match,MickeyMouse,MickeyMouse%))` --> `t`
+ - `$(call str-match,,%))` --> `t`
+
+#### $(call up-to,_word_,_list_)
+ Return first part of _list_ up to but excluding the first occurrence of _word_.
+ If _word_ is not in _list_, the whole list is returned.
+ Examples:
+ - `$(call up-to,baz,foo bar baz)` -> `foo bar`
+ - `$(call up-to,foo,foo bar baz)` -> ` ` (empty list)
+
+#### $(call index-of,_word_,_list_)
+ Return the index of the first occurrence of _word_ if present or the empty list.
+ *Indexing starts at 0*, contrary to the make-internal behaviour of numbering lists from 1!
+ Note that you can always have an index starting at 1 by prefixing the list at
+ call time with the $(-never-matching) element (or a simple underscore, if you are sure that 
+ it is never a real element), i.e. `$(call index-of,foo,$(-never-matching) foo bar baz)` will give index 1.
+ Examples:
+ - `$(call index-of,foo,foo bar baz)` -> `0`
+
+#### $(call from-on,_word_,_list_)
+ Return the portion of _list_ following the first occurrence of _word_.
+ If _word_ is not in _list_, the empty string/list is returned.
+ Examples:
+ - `$(call from-on,foo,foo bar baz)` -> `bar baz`
+ - `$(call from-on,baz,foo bar baz)` -> ` ` (empty list)
+
+#### $(call add,_num1_,_num2_)
+ Calculate _num1+num2_. Both arguments are signed integers.
+ Numeric bases can be mixed, the result is given in the same base as _num1_.
+ Examples:
+ - `$(call add,-1,0)` --> `-1`
+ - `$(call add,0x12,13)` --> `0x1f`
+
+#### $(call sub,_num1_,_num2_)
+ Calculate _num1-num2_. Both arguments are signed integers.
+ Numeric bases can be mixed, the result is given in the same base as _num1_.
+ Examples:
+ - `$(call sub,12,-10)` --> `22`
+ - `$(call sub,012,-10)` --> `024`
+
+#### $(call mul,_num1_,_num2_)
+ Multiply integer _num1_ with integer _num2_. Both arguments can be signed.
+ Numeric bases can be mixed, the result is given in the same base as _num1_.
+ Examples:
+ - `$(call mul,-1,0)` --> `0`
+ - `$(call mul,-0x1,0)` --> `0x0`
+ - `$(call mul,03,-7)` --> `-025`
+
+#### $(call div,_num1_,_num2_)
+ Divide integer _num1_ by integer _num2_. Both arguments can be signed.
+ Numeric bases can be mixed, the result is given in the same base as _num1_.
+ Examples:
+ - `$(call div,9876543210,0x13)` --> `519818063`
+ - `$(call div,0x9876543210,16)` --> `0x987654321`
+
+#### $(call select,_table_,_col-nrs_,_where-clause_)
+ Select rows from a _table_ which fulfill the _where-clause_. A gmtt **table** is
+ a list with a leading decimal that denotes the number of columns in this 'table'.
+ See the documentation for gmtt at [https://github.com/markpiffer/gmtt].
+ The _where-clause_ is a function or a 'lambda' expression (i.e. function expression
+ written into the parameter place directly) which receives the elements of each row of
+ the table in order as parameters `$1`,`$2`,`$3` etc. **Note:** the function call/lambda
+ needs to be $-quoted, that is, every '$' that appears as variable reference must be
+ doubled '$$'. See the examples below. The clause shall return true (non-empty string)
+ or false (empty string) to accept/reject each rows elements into/from the result
+ of the select. The selection is limited to the column numbers given in _col-nrs_,
+ in their respective order.
+ `select` returns effectively a list of subsets from all positively selected rows.
+ Example:
+ - `test-tbl := 4   foo bar baz 11    foo bar baf 22   faa bar baz 33`
+ - `$(call select,$(test-tbl),3 1 2 3,$$(call str-match,$$1,%oo))` --> `baz foo bar baz baf foo bar baf`
+ The same can be achieved, if we use a function as where clause:
+ - `ends-in-oo = $(call str-match,$1,%oo)`
+ - `$(call select,$(test-tbl),3 1 2 3,$$(call where,$$1))` --> `baz foo bar baz baf foo bar baf`

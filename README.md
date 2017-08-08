@@ -203,4 +203,4 @@ are not.
  - `$(call select,$(test-tbl),3 1 2 3,$$(call str-match,$$1,%oo))` --> `baz foo bar baz baf foo bar baf`
  The same can be achieved, if we use a function as where clause:
  - `ends-in-oo = $(call str-match,$1,%oo)`
- - `$(call select,$(test-tbl),3 1 2 3,$$(call where,$$1))` --> `baz foo bar baz baf foo bar baf`
+ - `$(call select,$(test-tbl),3 1 2 3,$$(call ends-in-oo,$$1))` --> `baz foo bar baz baf foo bar baf`

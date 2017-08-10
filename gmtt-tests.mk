@@ -112,7 +112,7 @@ $(call -gmtt-test,$$(call -8to16,1 1),9)
 $(call -gmtt-test,$$(call -bld-ix,1 2 3 4 5 6 7 8 9), 0 1 2 3 4 5 6 7 8)
 $(call -gmtt-test,$$(call -bld-ix,1 2 3 4 5 6 7 8 9 10), 00 01 02 03 04 05 06 07 08 09)
 $(call -gmtt-test,$$(call -bld-ix,1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19), 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18)
-$(call -gmtt-test,$$(call -bld-ix,1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19,¤), ¤00 ¤01 ¤02 ¤03 ¤04 ¤05 ¤06 ¤07 ¤08 ¤09 ¤10 ¤11 ¤12 ¤13 ¤14 ¤15 ¤16 ¤17 ¤18)
+$(call -gmtt-test,$$(call -bld-ix,1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19,Â¤), Â¤00 Â¤01 Â¤02 Â¤03 Â¤04 Â¤05 Â¤06 Â¤07 Â¤08 Â¤09 Â¤10 Â¤11 Â¤12 Â¤13 Â¤14 Â¤15 Â¤16 Â¤17 Â¤18)
 $(call -gmtt-test,$$(call -onescompl16,8 8),7 7)
 $(call -gmtt-test,$$(call -sub16,f8 f8),7 7)
 
@@ -259,7 +259,7 @@ endef
 
 $(call -gmtt-test,$$(call sort-tbl,$$(test-tbl),$$$$1),3 x1-y1 x2-y1 x3-y1 x1-y2 x2-y2 x3-y2 x1-y3 x2-y3 x3-y3)
 $(call -gmtt-test,$$(call rsort-tbl,$$(test-tbl),$$$$1),3 x1-y3 x2-y3 x3-y3 x1-y2 x2-y2 x3-y2 x1-y1 x2-y1 x3-y1)
-$(call -gmtt-test,$$(call select,$$(test-tbl),3 1 2,$$$$(call str-eq,$$$$1,x1-y3)),x3-y3 x1-y3 x2-y3)
+$(call -gmtt-test,$$(call select,3 1 2,$$(test-tbl),$$$$(call str-eq,$$$$1,x1-y3)),x3-y3 x1-y3 x2-y3)
 
 define test-tbl =
 4
@@ -268,13 +268,12 @@ foo bar baf 22
 faa bar baz 33
 endef
 
-$(call -gmtt-test,$$(call select,$$(test-tbl),3 1 2 3,$$$$(call str-match,$$$$1,%oo)),baz foo bar baz baf foo bar baf)
+$(call -gmtt-test,$$(call select,3 1 2 3,$$(test-tbl),$$$$(call str-match,$$$$1,%oo)),baz foo bar baz baf foo bar baf)
 ends-in-oo = $(call str-match,$1,%oo)
-$(call -gmtt-test,$$(call select,$$(test-tbl),3 1 2 3,$$$$(call ends-in-oo,$$$$1)),baz foo bar baz baf foo bar baf)
+$(call -gmtt-test,$$(call select,3 1 2 3,$$(test-tbl),$$$$(call ends-in-oo,$$$$1)),baz foo bar baz baf foo bar baf)
 
 
-$(call -gmtt-test,$$(call map-select,$$(test-tbl),4 1 2 3,$$$$(call str-match,$$$$1,%oo),$$$$(call mul,0x2,$$$$1) this:$$$$2 that:$$$$3 $$$$4),0x16 this:foo that:bar baz 0x2c this:foo that:bar baf)
-
+$(call -gmtt-test,$$(call map-select,4 1 2 3,$$(test-tbl),$$$$(call str-match,$$$$1,%oo),$$$$(call mul,0x2,$$$$1) this:$$$$2 that:$$$$3 $$$$4),0x16 this:foo that:bar baz 0x2c this:foo that:bar baf)
 
 
 $(info Tests finished.)

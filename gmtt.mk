@@ -164,7 +164,7 @@ str-ge = $(if $(filter _$(subst $(space),_,$(strip $2)),$(firstword $(sort _$(su
 ## - `$(call str-match,Mickey %ouse,Mickey Mouse))` --> `t`
 ## - `$(call str-match,MickeyMouse,MickeyMouse%))` --> `t`
 ## - `$(call str-match,,%))` --> `t`
-str-match = $(if $(and $(patsubst _$(subst $(space),¤,$(strip $1)),,_$(subst $(space),¤,$(strip $2))),$(patsubst _$(subst $(space),¤,$(strip $2)),,_$(subst $(space),¤,$(strip $1)))),,t)
+str-match = $(if $(and $(patsubst _$(subst $(space),Â¤,$(strip $1)),,_$(subst $(space),Â¤,$(strip $2))),$(patsubst _$(subst $(space),Â¤,$(strip $2)),,_$(subst $(space),Â¤,$(strip $1)))),,t)
 
 
 #----------------------------------------------------------------------
@@ -173,15 +173,15 @@ str-match = $(if $(and $(patsubst _$(subst $(space),¤,$(strip $1)),,_$(subst $(s
 -rev-list = $(if $1,$(call -rev-list,$(wordlist 2,$2,$1),$2) $(firstword $1))
 
 #----------------------------------------------------------------------
-# Add a ¤ (Character 164) and a unique binary number to all elements of a list
+# Add a Â¤ (Character 164) and a unique binary number to all elements of a list
 # $1 = list
 # $2 = binary literal (needs 0 or any other as starting value)
-cat-sufx = $(if $1,$(firstword $1)¤$2 $(call cat-sufx,$(wordlist 2,2147483647,$1),$(call bincnt,$2)))
+cat-sufx = $(if $1,$(firstword $1)Â¤$2 $(call cat-sufx,$(wordlist 2,2147483647,$1),$(call bincnt,$2)))
 
 #----------------------------------------------------------------------
 # Sort a list without dropping duplicates (built-in $(sort) will drop them)
-# $1 = list (elements must not contain ¤ (Character 164))
-sort-all = $(foreach i,$(sort $(call cat-sufx,$1,0)),$(firstword $(subst ¤, ,$(i))))
+# $1 = list (elements must not contain Â¤ (Character 164))
+sort-all = $(foreach i,$(sort $(call cat-sufx,$1,0)),$(firstword $(subst Â¤, ,$(i))))
 
 #----------------------------------------------------------------------
 # $1 = list to invert
@@ -192,7 +192,7 @@ list2param = $(subst $(space),$(comma),$(strip $1))
 lambda = $(eval -lambda=$1)$(eval -lambda:=$$(call -lambda,$(call list2param,$2)))$(-lambda)
 format = $(lambda)
 
--never-matching := ¥# character 165, this is used as a list element that should never appear as a real element
+-never-matching := Â¥# character 165, this is used as a list element that should never appear as a real element
 
 #----------------------------------------------------------------------
 ###### $(call up-to,_word_,_list_)
@@ -201,7 +201,7 @@ format = $(lambda)
 ## Examples:
 ## - `$(call up-to,baz,foo bar baz)` -> `foo bar`
 ## - `$(call up-to,foo,foo bar baz)` -> ` ` (empty list)
-up-to = $(if $(findstring $1,$(firstword $2)),,$(strip $(subst ¤, ,$(firstword $(subst ¤$2¤, ,$(subst $(space),¤, $2 ))))))
+up-to = $(if $(findstring $1,$(firstword $2)),,$(strip $(subst Â¤, ,$(firstword $(subst Â¤$2Â¤, ,$(subst $(space),Â¤, $2 ))))))
 
 
 #----------------------------------------------------------------------
@@ -834,10 +834,10 @@ fill-up = $(call bit-or,$1,$(call sub,$2,1))
 # This means that if the first key would be sorted to position 15,
 # then in the returned list at position 15 there will be a 1.
 # These numbers can be directly used as index in the $(wordlist) function.
-# Character 164('¤') is used as separator and is forbidden in key columns.
+# Character 164('Â¤') is used as separator and is forbidden in key columns.
 # $1 - list of keys before sorting
 # $2 - table width
--sort-ix = $(foreach i,$(filter-out %¤,$(subst ¤,¤ ,$(sort $(join $1,$(call -bld-ix,$1,¤))))),$(call -uadd10,1,$(call -umul10,$(i),$2)))
+-sort-ix = $(foreach i,$(filter-out %Â¤,$(subst Â¤,Â¤ ,$(sort $(join $1,$(call -bld-ix,$1,Â¤))))),$(call -uadd10,1,$(call -umul10,$(i),$2)))
 
 #----------------------------------------------------------------------
 # Generate a list of reversely sorted indexes from the given unsorted keys.
@@ -881,8 +881,9 @@ print-tbl = $(call -print-tbl,$(strip $1),$2)
 pick = $(foreach elem,$1,$(word $(elem),$2))
 
 #----------------------------------------------------------------------
-###### $(call select,_table_,_col-nrs_,_where-clause_)
-## Select rows from a _table_ which fulfill the _where-clause_. A gmtt **table** is
+###### $(call select,_col-nrs_,_table_,_where-clause_)
+## Select all rows from a _table_ which fulfill the _where-clause_ and pick the subset
+## of _col-nrs_ from these rows to form an output list. A gmtt **table** is
 ## a list with a leading decimal which denotes the number of columns in this 'table'.
 ## See the documentation for gmtt at [https://github.com/markpiffer/gmtt].
 ## The _where-clause_ is a function or a 'lambda' expression (i.e. function expression
@@ -892,28 +893,32 @@ pick = $(foreach elem,$1,$(word $(elem),$2))
 ## doubled '$$'. See the examples below. The clause shall return true (non-empty string)
 ## or false (empty string) to accept/reject each rows elements into/from the result
 ## of the select. The selection is limited to the column numbers given in _col-nrs_,
-## in their respective order.
-## `select` returns effectively a list of subsets from all positively selected rows.
+## in their respective order. Do not confuse the _col-nrs_ subset with the parameters 
+## given to the 'where' function, the former is just a possibly reordered subset of the
+## latter which is formed after the 'where' function accepted the record.
+## (`select` mimics a SQL `SELECT model, price FROM cars WHERE color="red"` and 
+## returns effectively a list of subsets from all positively selected rows. If you prepend
+## the result list with its column count, you have a new gmtt table)
 ## Example:
 ## - `test-tbl := 4   foo bar baz 11    foo bar baf 22   faa bar baz 33`
-## - `$(call select,$(test-tbl),3 1 2 3,$$(call str-match,$$1,%oo))` --> `baz foo bar baz baf foo bar baf`
+## - `$(call select,3 1 2 3,$(test-tbl),$$(call str-match,$$1,%oo))` --> `baz foo bar baz baf foo bar baf`
 ## The same can be achieved, if we use a function as where clause:
 ## - `ends-in-oo = $(call str-match,$1,%oo)`
-## - `$(call select,$(test-tbl),3 1 2 3,$$(call ends-in-oo,$$1))` --> `baz foo bar baz baf foo bar baf`
-select = $(call -select,$(strip $1),$2,$3)
--select = $(call --select,$(wordlist 2,2147483647,$1),$(firstword $1),$(call add,$(firstword $1),1),$2,$3)
+## - `$(call select,3 1 2 3,$(test-tbl),$$(call ends-in-oo,$$1))` --> `baz foo bar baz baf foo bar baf`
+select = $(call -select,$1,$(strip $2),$3)
+-select = $(call --select,$(wordlist 2,2147483647,$2),$(firstword $2),$(call add,$(firstword $2),1),$1,$3)
 --select = $(if $1,$(if $(call lambda,$5,$(call list2param,$(wordlist 1,$2,$1))), $(call pick,$4,$1))$(call --select,$(wordlist $3,2147483647,$1),$2,$3,$4,$5))
 
 
 
 #----------------------------------------------------------------------
-# $1 = table
-# $2 = list of column numbers
+# $1 = list of column numbers
+# $2 = table
 # $3 = "where-clause", function of $4 parameters returning true (non-null) or false (empty string)
 # $4 = a function which processes a list containing the selection from $3 on each iteration of the select
 # returns: a list of columns (selection in $2) from the rows in table $1 where condition $3 is non-null
-map-select = $(call -map-select,$(strip $1),$2,$3,$4)
--map-select = $(call --map-select,$(wordlist 2,2147483647,$1),$(firstword $1),$(call add,$(firstword $1),1),$2,$3,$4)
+map-select = $(call -map-select,$1,$(strip $2),$3,$4)
+-map-select = $(call --map-select,$(wordlist 2,2147483647,$2),$(firstword $2),$(call add,$(firstword $2),1),$1,$3,$4)
 --map-select = $(if $1,$(if $(call lambda,$5,$(call list2param,$(wordlist 1,$2,$1))), $(call lambda,$6,$(call list2param,$(call pick,$4,$1))))$(call --map-select,$(wordlist $3,2147483647,$1),$2,$3,$4,$5,$6))
 
 

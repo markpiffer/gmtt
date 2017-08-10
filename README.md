@@ -185,9 +185,10 @@ are not.
  - `$(call div,9876543210,0x13)` --> `519818063`
  - `$(call div,0x9876543210,16)` --> `0x987654321`
 
-#### $(call select,_table_,_col-nrs_,_where-clause_)
- Select rows from a _table_ which fulfill the _where-clause_. A gmtt **table** is
- a list with a leading decimal that denotes the number of columns in this 'table'.
+#### $(call select,_col-nrs_,_table_,_where-clause_)
+ Select all rows from a _table_ which fulfill the _where-clause_ and pick the subset
+ of _col-nrs_ from these rows to form an output list. A gmtt **table** is
+ a list with a leading decimal which denotes the number of columns in this 'table'.
  See the documentation for gmtt at [https://github.com/markpiffer/gmtt].
  The _where-clause_ is a function or a 'lambda' expression (i.e. function expression
  written into the parameter place directly) which receives the elements of each row of
@@ -196,11 +197,15 @@ are not.
  doubled '$$'. See the examples below. The clause shall return true (non-empty string)
  or false (empty string) to accept/reject each rows elements into/from the result
  of the select. The selection is limited to the column numbers given in _col-nrs_,
- in their respective order.
- `select` returns effectively a list of subsets from all positively selected rows.
+ in their respective order. Do not confuse the _col-nrs_ subset with the parameters 
+ given to the 'where' function, the former is just a possibly reordered subset of the
+ latter which is formed after the 'where' function accepted the record.
+ (`select` mimics a SQL `SELECT model, price FROM cars WHERE color="red"` and 
+ returns effectively a list of subsets from all positively selected rows. If you prepend
+ the result list with its column count, you have a new gmtt table)
  Example:
  - `test-tbl := 4   foo bar baz 11    foo bar baf 22   faa bar baz 33`
- - `$(call select,$(test-tbl),3 1 2 3,$$(call str-match,$$1,%oo))` --> `baz foo bar baz baf foo bar baf`
+ - `$(call select,3 1 2 3,$(test-tbl),$$(call str-match,$$1,%oo))` --> `baz foo bar baz baf foo bar baf`
  The same can be achieved, if we use a function as where clause:
  - `ends-in-oo = $(call str-match,$1,%oo)`
- - `$(call select,$(test-tbl),3 1 2 3,$$(call ends-in-oo,$$1))` --> `baz foo bar baz baf foo bar baf`
+ - `$(call select,3 1 2 3,$(test-tbl),$$(call ends-in-oo,$$1))` --> `baz foo bar baz baf foo bar baf`

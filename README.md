@@ -81,8 +81,8 @@ are not.
 #### $(call str-eq,_string1_,_string2_)
  Compare two strings on equality. Strings are allowed to have blanks.
  Return non-empty if string $1 and $2 are identical, empty string otherwise.
- - `$(call str-eq,yes,no)` --> `` (empty string)
- - `$(call str-eq,yes ,yes)` --> `` (empty string)
+ - `$(call str-eq,yes,no)` --> ` ` (empty string)
+ - `$(call str-eq,yes ,yes)` --> ` ` (empty string)
  - `$(call str-eq,yes ,yes )`  --> `t`
 
 #### $(call str-le,_string1_,_string2_)
@@ -95,13 +95,13 @@ are not.
  should know what you are doing if you have spaces inside your strings.
  Examples:
  - `$(call str-le,aaa,ab))` --> `t` 			     
- - `$(call str-le,   ab aa,aa))` --> ``	(empty string)	     
+ - `$(call str-le,   ab aa,aa))` --> ` `	(empty string)	     
  - `$(call str-le,aa,aa))` --> `t`			     
- - `$(call str-le,aa,a))` --> ``	(empty string)		     
- - `$(call str-le,a,))` --> `` (empty string)			     
+ - `$(call str-le,aa,a))` --> ` `	(empty string)		     
+ - `$(call str-le,a,))` --> ` ` (empty string)			     
  - `$(call str-le,,a))` --> `t`			     
  - `$(call str-le,MacGyver John,Mac Gyver John))` --> `t`
- - `$(call str-le,macgyver john,mac gyver john))` --> `` (empty string)
+ - `$(call str-le,macgyver john,mac gyver john))` --> ` ` (empty string)
 
 #### $(call str-ge,_string1_,_string2_)
  Compare two strings lexically for _string1_ greater-or-equal _string2_.
@@ -112,13 +112,13 @@ are not.
  smaller than downcase characters but greater than upcase. In short: you
  should know what you are doing if you have spaces inside your strings.
  Examples:
- - `$(call str-ge,aaa,ab))` --> `` (empty string) 			     
+ - `$(call str-ge,aaa,ab))` --> ` ` (empty string) 			     
  - `$(call str-ge,   ab aa,aa))` --> `t`
  - `$(call str-ge,aa,aa))` --> `t`			     
  - `$(call str-ge,aa,a))` --> `t`
  - `$(call str-ge,a,))` --> `t`			     
- - `$(call str-ge,,a))` --> `` (empty string)			     
- - `$(call str-ge,MacGyver John,Mac Gyver John))` --> `` (empty string)
+ - `$(call str-ge,,a))` --> ` ` (empty string)			     
+ - `$(call str-ge,MacGyver John,Mac Gyver John))` --> ` ` (empty string)
  - `$(call str-ge,macgyver john,mac gyver john))` --> `t`
 
 #### $(call str-match,_string1_,_string2_)
@@ -128,7 +128,7 @@ are not.
  wildcard, return empty string otherwise. 
  - `$(call str-match,Mickey%Mouse,Mickey Mouse))` --> `t`
  - `$(call str-match,Mickey%,MickeyMouse))` --> `t`
- - `$(call str-match,Mickey%,))` --> `` (empty string)
+ - `$(call str-match,Mickey%,))` --> ` ` (empty string)
  - `$(call str-match,Mickey %ouse,Mickey Mouse))` --> `t`
  - `$(call str-match,MickeyMouse,MickeyMouse%))` --> `t`
  - `$(call str-match,,%))` --> `t`
@@ -149,12 +149,30 @@ are not.
  Examples:
  - `$(call index-of,foo,foo bar baz)` -> `0`
 
-#### $(call from-on,_word_,_list_)
+#### $(call up-from,_word_,_list_)
  Return the portion of _list_ following the first occurrence of _word_.
  If _word_ is not in _list_, the empty string/list is returned.
  Examples:
- - `$(call from-on,foo,foo bar baz)` -> `bar baz`
- - `$(call from-on,baz,foo bar baz)` -> ` ` (empty list)
+ - `$(call up-from,foo,foo bar baz)` -> `bar baz`
+ - `$(call up-from,baz,foo bar baz)` -> ` ` (empty list)
+
+#### $(call down-to,_word_,_list_)
+ Return the last part of _list_, searching from the end down to but
+ excluding the last occurrence of _word_.
+ If _word_ is not in _list_, the whole list is returned. This operation is so
+ common in dissecting e.g. path that it was introduced for convenience.
+ Examples:
+ - `$(call down-to,baz,foo baz bar baz)` -> ` ` (empty list)
+ - `$(call down-to,foo,foo foo bar baz)` -> `bar baz`
+
+#### $(call down-from,_word_,_list_)
+ Return the first part of _list_, searching from the end down to but
+ excluding the last occurrence of _word_.
+ If _word_ is not in _list_, the whole list is returned. This operation is so
+ common in dissecting e.g. path that it was introduced for convenience.
+ Examples:
+ - `$(call down-from,baz,foo baz bar baz)` -> `foo baz bar`
+ - `$(call down-from,foo,foo bar baz)` -> ` ` (empty list)
 
 #### $(call add,_num1_,_num2_)
  Calculate _num1+num2_. Both arguments are signed integers.

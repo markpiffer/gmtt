@@ -112,7 +112,7 @@ $(call -gmtt-test,$$(call -8to16,1 1),9)
 $(call -gmtt-test,$$(call -bld-ix,1 2 3 4 5 6 7 8 9), 0 1 2 3 4 5 6 7 8)
 $(call -gmtt-test,$$(call -bld-ix,1 2 3 4 5 6 7 8 9 10), 00 01 02 03 04 05 06 07 08 09)
 $(call -gmtt-test,$$(call -bld-ix,1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19), 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18)
-$(call -gmtt-test,$$(call -bld-ix,1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19,Â¤), Â¤00 Â¤01 Â¤02 Â¤03 Â¤04 Â¤05 Â¤06 Â¤07 Â¤08 Â¤09 Â¤10 Â¤11 Â¤12 Â¤13 Â¤14 Â¤15 Â¤16 Â¤17 Â¤18)
+$(call -gmtt-test,$$(call -bld-ix,1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19,¤), ¤00 ¤01 ¤02 ¤03 ¤04 ¤05 ¤06 ¤07 ¤08 ¤09 ¤10 ¤11 ¤12 ¤13 ¤14 ¤15 ¤16 ¤17 ¤18)
 $(call -gmtt-test,$$(call -onescompl16,8 8),7 7)
 $(call -gmtt-test,$$(call -sub16,f8 f8),7 7)
 
@@ -249,6 +249,17 @@ $(call -gmtt-test,$$(call fill-up,0x1234,0x1000),0x1fff)
 $(call -gmtt-test,$$(call fill-up,0x1234,256),0x12ff)
 $(call -gmtt-test,$$(call fill-up,0x1234,0x10000),0xffff)
 $(call -gmtt-test,$$(call fill-up,0x123456,0),0xffffff)
+$(call -gmtt-test,$$(call up-to,baz,foo bar baz),foo bar)
+$(call -gmtt-test,$$(call up-to,foo,foo bar baz),)
+$(call -gmtt-test,$$(call up-to,foo,),)
+$(call -gmtt-test,$$(call up-to,,foo bar baz),foo bar baz)
+$(call -gmtt-test,$$(call index-of,foo,foo bar baz),0)
+$(call -gmtt-test,$$(call up-from,foo,foo bar baz),bar baz)
+$(call -gmtt-test,$$(call up-from,baz,foo bar baz),)
+$(call -gmtt-test,$$(call down-to,baz,foo baz bar baz),)
+$(call -gmtt-test,$$(call down-to,foo,foo foo bar baz),bar baz)
+$(call -gmtt-test,$$(call down-from,baz,foo baz bar baz),foo baz bar)
+$(call -gmtt-test,$$(call down-from,foo,foo bar baz),)
 
 define test-tbl =
 3
@@ -274,6 +285,7 @@ $(call -gmtt-test,$$(call select,3 1 2 3,$$(test-tbl),$$$$(call ends-in-oo,$$$$1
 
 
 $(call -gmtt-test,$$(call map-select,4 1 2 3,$$(test-tbl),$$$$(call str-match,$$$$1,%oo),$$$$(call mul,0x2,$$$$1) this:$$$$2 that:$$$$3 $$$$4),0x16 this:foo that:bar baz 0x2c this:foo that:bar baf)
+
 
 
 $(info Tests finished.)

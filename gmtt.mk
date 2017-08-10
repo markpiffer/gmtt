@@ -41,14 +41,14 @@ alnum-chars := _ $([0-9]) $([A-Z]) $([a-z])
 ## Insert a blank after every occurrence of the strings from _stringlist_ in _string_.
 ## This function serves mainly to convert a string into a list.
 ## Example: `$(call explode,0 1 2 3 4 5 6 7 8 9,0x1337c0de)` --> `0 x1 3 3 7 c0 de`
-explode = $(if $1,$(subst $(firstword $1),$(firstword $1) ,$(call explode,$(wordlist 2,255,$1),$2)),$2)
+explode = $(if $1,$(subst $(firstword $1),$(firstword $1) ,$(call explode,$(wordlist 2,2147483647,$1),$2)),$2)
 
 #----------------------------------------------------------------------
 ###### $(call implode,_string-with-spaces_)
 ## Remove all spaces from the given string. Note that make is mostly unaware of escape
 ## characters and therefore takes all spaces verbatim.
 ## Example: `$(call implode,some\ awkward\ Windows\ path)` --> `some\awkward\Windows\path`
-implode = $(subst $(space),,$1)
+implode = $(subst $(space),$2,$(strip $1))
 
 #----------------------------------------------------------------------
 # Repeat a string for 2^N times. N is given in the form of a list with length N.
@@ -164,7 +164,7 @@ str-ge = $(if $(filter _$(subst $(space),_,$(strip $2)),$(firstword $(sort _$(su
 ## - `$(call str-match,Mickey %ouse,Mickey Mouse))` --> `t`
 ## - `$(call str-match,MickeyMouse,MickeyMouse%))` --> `t`
 ## - `$(call str-match,,%))` --> `t`
-str-match = $(if $(and $(patsubst _$(subst $(space),Â¤,$(strip $1)),,_$(subst $(space),Â¤,$(strip $2))),$(patsubst _$(subst $(space),Â¤,$(strip $2)),,_$(subst $(space),Â¤,$(strip $1)))),,t)
+str-match = $(if $(and $(patsubst _$(subst $(space),¤,$(strip $1)),,_$(subst $(space),¤,$(strip $2))),$(patsubst _$(subst $(space),¤,$(strip $2)),,_$(subst $(space),¤,$(strip $1)))),,t)
 
 
 #----------------------------------------------------------------------
@@ -173,15 +173,15 @@ str-match = $(if $(and $(patsubst _$(subst $(space),Â¤,$(strip $1)),,_$(subst $(
 -rev-list = $(if $1,$(call -rev-list,$(wordlist 2,$2,$1),$2) $(firstword $1))
 
 #----------------------------------------------------------------------
-# Add a Â¤ (Character 164) and a unique binary number to all elements of a list
+# Add a ¤ (Character 164) and a unique binary number to all elements of a list
 # $1 = list
 # $2 = binary literal (needs 0 or any other as starting value)
-cat-sufx = $(if $1,$(firstword $1)Â¤$2 $(call cat-sufx,$(wordlist 2,2147483647,$1),$(call bincnt,$2)))
+cat-sufx = $(if $1,$(firstword $1)¤$2 $(call cat-sufx,$(wordlist 2,2147483647,$1),$(call bincnt,$2)))
 
 #----------------------------------------------------------------------
 # Sort a list without dropping duplicates (built-in $(sort) will drop them)
-# $1 = list (elements must not contain Â¤ (Character 164))
-sort-all = $(foreach i,$(sort $(call cat-sufx,$1,0)),$(firstword $(subst Â¤, ,$(i))))
+# $1 = list (elements must not contain ¤ (Character 164))
+sort-all = $(foreach i,$(sort $(call cat-sufx,$1,0)),$(firstword $(subst ¤, ,$(i))))
 
 #----------------------------------------------------------------------
 # $1 = list to invert
@@ -192,7 +192,7 @@ list2param = $(subst $(space),$(comma),$(strip $1))
 lambda = $(eval -lambda=$1)$(eval -lambda:=$$(call -lambda,$(call list2param,$2)))$(-lambda)
 format = $(lambda)
 
--never-matching := Â¥# character 165, this is used as a list element that should never appear as a real element
+-never-matching := ¥# character 165, this is used as a list element that should never appear as a real element
 
 #----------------------------------------------------------------------
 ###### $(call up-to,_word_,_list_)
@@ -201,8 +201,7 @@ format = $(lambda)
 ## Examples:
 ## - `$(call up-to,baz,foo bar baz)` -> `foo bar`
 ## - `$(call up-to,foo,foo bar baz)` -> ` ` (empty list)
-up-to = $(if $(findstring $1,$(firstword $2)),,$(strip $(subst Â¤, ,$(firstword $(subst Â¤$2Â¤, ,$(subst $(space),Â¤, $2 ))))))
-
+up-to = $(if $(findstring $1,$(firstword $2)),,$(strip $(subst ¤, ,$(firstword $(subst ¤$1¤, ,$(subst $(space),¤, $2 ))))))
 
 #----------------------------------------------------------------------
 ###### $(call index-of,_word_,_list_)
@@ -216,13 +215,36 @@ up-to = $(if $(findstring $1,$(firstword $2)),,$(strip $(subst Â¤, ,$(firstword 
 index-of = $(if $(findstring $1,$2),$(words $(call up-to,$1,$2)))
 
 #----------------------------------------------------------------------
-###### $(call from-on,_word_,_list_)
+###### $(call up-from,_word_,_list_)
 ## Return the portion of _list_ following the first occurrence of _word_.
 ## If _word_ is not in _list_, the empty string/list is returned.
 ## Examples:
-## - `$(call from-on,foo,foo bar baz)` -> `bar baz`
-## - `$(call from-on,baz,foo bar baz)` -> ` ` (empty list)
-from-on = $(strip $(wordlist $(or $(call index-of,$1,$(-never-matching) $(-never-matching) $2),2147483647),2147483647,$2))
+## - `$(call up-from,foo,foo bar baz)` -> `bar baz`
+## - `$(call up-from,baz,foo bar baz)` -> ` ` (empty list)
+up-from = $(strip $(wordlist $(or $(call index-of,$1,$(-never-matching) $(-never-matching) $2),2147483647),2147483647,$2))
+
+
+#----------------------------------------------------------------------
+###### $(call down-to,_word_,_list_)
+## Return the last part of _list_, searching from the end down to but
+## excluding the last occurrence of _word_.
+## If _word_ is not in _list_, the whole list is returned. This operation is so
+## common in dissecting e.g. path that it was introduced for convenience.
+## Examples:
+## - `$(call down-to,baz,foo baz bar baz)` -> ` ` (empty list)
+## - `$(call down-to,foo,foo foo bar baz)` -> `bar baz`
+down-to = $(call rev-list,$(call up-to,$1,$(call rev-list,$2)))
+
+#----------------------------------------------------------------------
+###### $(call down-from,_word_,_list_)
+## Return the first part of _list_, searching from the end down to but
+## excluding the last occurrence of _word_.
+## If _word_ is not in _list_, the whole list is returned. This operation is so
+## common in dissecting e.g. path that it was introduced for convenience.
+## Examples:
+## - `$(call down-from,baz,foo baz bar baz)` -> `foo baz bar`
+## - `$(call down-from,foo,foo bar baz)` -> ` ` (empty list)
+down-from = $(call rev-list,$(call up-from,$1,$(call rev-list,$2)))
 
 
 #----------------------------------------------------------------------
@@ -834,10 +856,10 @@ fill-up = $(call bit-or,$1,$(call sub,$2,1))
 # This means that if the first key would be sorted to position 15,
 # then in the returned list at position 15 there will be a 1.
 # These numbers can be directly used as index in the $(wordlist) function.
-# Character 164('Â¤') is used as separator and is forbidden in key columns.
+# Character 164('¤') is used as separator and is forbidden in key columns.
 # $1 - list of keys before sorting
 # $2 - table width
--sort-ix = $(foreach i,$(filter-out %Â¤,$(subst Â¤,Â¤ ,$(sort $(join $1,$(call -bld-ix,$1,Â¤))))),$(call -uadd10,1,$(call -umul10,$(i),$2)))
+-sort-ix = $(foreach i,$(filter-out %¤,$(subst ¤,¤ ,$(sort $(join $1,$(call -bld-ix,$1,¤))))),$(call -uadd10,1,$(call -umul10,$(i),$2)))
 
 #----------------------------------------------------------------------
 # Generate a list of reversely sorted indexes from the given unsorted keys.
@@ -920,6 +942,8 @@ select = $(call -select,$1,$(strip $2),$3)
 map-select = $(call -map-select,$1,$(strip $2),$3,$4)
 -map-select = $(call --map-select,$(wordlist 2,2147483647,$2),$(firstword $2),$(call add,$(firstword $2),1),$1,$3,$4)
 --map-select = $(if $1,$(if $(call lambda,$5,$(call list2param,$(wordlist 1,$2,$1))), $(call lambda,$6,$(call list2param,$(call pick,$4,$1))))$(call --map-select,$(wordlist $3,2147483647,$1),$2,$3,$4,$5,$6))
+
+
 
 
 

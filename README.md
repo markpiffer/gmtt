@@ -2,7 +2,7 @@
 The GNU make table toolkit
 
 ## Overview
-gmtt is a collection of GNU make functions which among other things implement sorting and searching in tabular data. The intention is to manage build configuration data (like memory ranges, interrupt vectors in embedded system bootloaders and so on) in a way that doesn't force you out to the shell. This has the additional benfit that you may get away with easier portability between Unix and Windows.
+gmtt is a collection of GNU make functions which among other things implement sorting and searching in tabular data. The intention is to manage build configuration data (like platform dependencies, compilation options, memory ranges, interrupt vectors in embedded system bootloaders and so on) in a way that doesn't force you out to the shell and reaps the benefits of simple relational database functionality. This has the additional benfit that you may get away with easier portability between Unix and Windows.
 
 ### Tables
 make has only one complex data type: list. make lists are just sequences of non-empty strings separated by whitespace characters (space, tab, linefeed). Thus tables are implemented as make lists with a first element denoting the table width (number of colons) as a decimal number: `3 tic tac toe` is a table, while `alpha beta gamma` is not. Of course tables can (and usually will) be written as multi-line defines:

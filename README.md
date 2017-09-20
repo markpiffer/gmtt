@@ -68,15 +68,51 @@ are not.
 
 ### Function List
 
+
 #### $(call explode,_stringlist_,_string_)
  Insert a blank after every occurrence of the strings from _stringlist_ in _string_.
  This function serves mainly to convert a string into a list.
- Example: `$(call explode,0 1 2 3 4 5 6 7 8 9,0x1337c0de)` --> `0 x1 3 3 7 c0 de`
+ - `$(call explode,0 1 2 3 4 5 6 7 8 9,0x1337c0de)` --> `0 x1 3 3 7 c0 de`
 
 #### $(call implode,_string-with-spaces_)
  Remove all spaces from the given string. Note that make is mostly unaware of escape
  characters and therefore takes all spaces verbatim.
- Example: `$(call implode,some\ awkward\ Windows\ path)` --> `some\awkward\Windows\path`
+ - `$(call implode,some\ awkward\ Windows\ path)` --> `some\awkward\Windows\path`
+
+#### $(call n-list,_string_,_number-of-repetitions_)
+ Create a list with exactly _number-of-repetitions_ copies of a _string_.
+ - `$(call n-list,foo,3)` --> `foo foo foo`
+
+#### $(call bincnt,_binary-literal_)
+ Count the _binary-literal_ up by 1, yielding the following binary literal.
+ Leading zeros are preserved.
+ - `$(call bincnt,010011)` -> `010100`
+
+#### $(call symgen)
+ Generate a different string at each call. The last generated symbol is
+ accessible via `$(last-symgen)`.
+ - `$(call symgen)` --> `sym0`
+
+#### $(call interval,_start_,_range_[,_step_])
+ Create a list of integers starting at _start_ and having _range_ elements
+ with an increase (or decrease) of _step_ from one to the next. _step_ is optional
+ and defaults to 1 if not given.
+
+ Example:
+ - `$(call interval,5,5)` --> `5 6 7 8 9`
+ - `$(call interval,2,3,100)` --> `2 102 202`
+
+#### $(call lpad,_string_,_final-width_,_padding-character_)
+ Left-pad an alphanumeric string with the given character up to the given length.
+ If the original string is longer than _final-width_, nothing is padded.
+ Expample:
+ - `$(call lpad,123,7,0)` --> `0000123`
+ - `$(call lpad,123,7,-)` --> `----123`
+
+#### $(call lstrip,_string_,_prefix_)
+ Remove a _prefix_ from the given _string_. If the prefix doesn't exist, the
+ string is unchanged.
+ - `$(call lstrip,0x,0xABCD)` --> `ABCD`
 
 #### $(call str-eq,_string1_,_string2_)
  Compare two strings on equality. Strings are allowed to have blanks.
@@ -132,6 +168,35 @@ are not.
  - `$(call str-match,Mickey %ouse,Mickey Mouse))` --> `t`
  - `$(call str-match,MickeyMouse,MickeyMouse%))` --> `t`
  - `$(call str-match,,%))` --> `t`
+
+#### $(call uniq-sufx,_list_,_binary-literal_)
+ Add a ¤ (Character 164) and a unique binary number to all elements of the _list_.
+ The _binary-literal_ must be present and can be any combination of `0`'s and `1`'s.
+ - `$(call uniq-sufx,The quick brown fox,0)` --> `The¤0 quick¤1 brown¤10 fox¤11`
+ - `$(call uniq-sufx,The quick brown fox,111)` --> `The¤111 quick¤1000 brown¤1001 fox¤1010`
+
+#### $(call sort-all,_list_)
+ Sort a list without dropping duplicates. Built-in `$(sort)` will drop them which
+ is sometimes not what you want. _Note_: list elements must not contain ¤ (Character 164)
+ as this is character is used internally for processing.
+
+#### $(call rev-list,_list_)
+ Reverse the order of the elements of a list.
+ - `$(call rev-list,The quick brown fox)` --> `fox brown quick The`
+
+#### $(call list2param,_list_)
+ Convert the given _list_ to a string where each list element is
+ separated by a comma. Multiple spaces get reduced to one comma and
+ there is no comma at the start and end of the list.
+ - `$(call list2param,The   quick brown   fox)` --> `The,quick,brown,fox`
+
+#### $(call exec,_quoted-func_,_params_)
+ Evaluate the _quoted-func_ code in place, using the _params_ as parameter list.
+ _quoted-func_ is any GNUmake 'code' which could also appear on the rhs of a variable
+ definition but in the quoted form: every appearance of '$' is to be quoted with an
+ extra '$' (see examples). _params_ is a list of parameters separated by commas
+ (see list2params function) which is given as the call parameters _$1_,_$2_,etc.
+ to the function expression. 
 
 #### $(call up-to,_word_,_list_)
  Return first part of _list_ up to but excluding the first occurrence of _word_.
@@ -203,14 +268,29 @@ are not.
  - `$(call div,9876543210,0x13)` --> `519818063`
  - `$(call div,0x9876543210,16)` --> `0x987654321`
 
+#### $(call sort-tbl,_table_,_key-gen_)
+ Sort a _table_ by lines. Key comparison is done by lexical ordering.
+ Lexical ordering means that 'aa' < 'aaa' < 'aab' < 'ab'. The empty string
+ always compares smaller than any other string. The strings may contain spaces
+ but leading and trailing spaces are not considered in the comparison and
+ multiple interior spaces are substituted by a single one. Spaces compare
+ smaller than downcase characters but greater than upcase. In short: you
+ should know what you are doing if you have spaces inside your strings.
+
+ The _key-gen_ is a function expression which shall yield the key
+ for the sorting comparison. Note that the key is *always* 
+ evaluated as a string - this means that you usually can't use
+ numerals directly as key but have to left-pad them with 0's to 
+ make them the same length.
+
 #### $(call select,_col-nrs_,_table_,_where-clause_)
  Select all rows from a _table_ which fulfill the _where-clause_ and pick the subset
  of _col-nrs_ from these rows to form an output list. A gmtt **table** is
  a list with a leading decimal which denotes the number of columns in this 'table'.
  See the documentation for gmtt at [https://github.com/markpiffer/gmtt].
- The _where-clause_ is a function or a 'lambda' expression (i.e. function expression
+ The _where-clause_ is a function or a 'exec' expression (i.e. function expression
  written into the parameter place directly) which receives the elements of each row of
- the table in order as parameters `$1`,`$2`,`$3` etc. **Note:** the function call/lambda
+ the table in order as parameters `$1`,`$2`,`$3` etc. **Note:** the function call/exec
  needs to be $-quoted, that is, every '$' that appears as variable reference must be
  doubled '$$'. See the examples below. The clause shall return true (non-empty string)
  or false (empty string) to accept/reject each rows elements into/from the result
@@ -221,7 +301,8 @@ are not.
  (`select` mimics a SQL `SELECT model, price FROM cars WHERE color="red"` and 
  returns effectively a list of subsets from all positively selected rows. If you prepend
  the result list with its column count, you have a new gmtt table)
- Example:
+
+ Exapmle:
  - `test-tbl := 4   foo bar baz 11    foo bar baf 22   faa bar baz 33`
  - `$(call select,3 1 2 3,$(test-tbl),$$(call str-match,$$1,%oo))` --> `baz foo bar baz baf foo bar baf`
  The same can be achieved, if we use a function as where clause:

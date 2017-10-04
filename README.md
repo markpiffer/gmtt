@@ -253,6 +253,25 @@ are not.
  - `$(call sub,12,-10)` --> `22`
  - `$(call sub,012,-10)` --> `024`
 
+#### $(call cmp,_num1_,_num2_)
+ Compare _num1 with num2_ and emit the characters `<`,`>` or `=`. Both arguments
+ are signed integers. Numeric bases can be mixed.
+ Examples:
+ - `$(call cmp,12,-14)` --> `>`
+ - `$(call cmp,012,10)` --> `=`
+
+#### $(call int-(le|lt|ge|gt|eq),_num1_,_num2_)
+ Compare _num1 with num2_ and emit the characters `<`,`>`,`=` or the empty string.
+ The postfix alternatives decide which comparison is executed:
+ less-than (lt), less-or-equal (le), greater-than (gt),
+ greater-or-equal (ge) and equal (eq). 
+ Both arguments are signed integers. Numeric bases can be mixed. The result can
+ be used in an $(if ) expression.
+ Examples:
+ - `$(call int-ge,12,-14)` --> `>`
+ - `$(call int-le,12,-14)` --> ` ` (empty string)
+ - `$(if $(call int-eq,012,10),equal,not equal)` --> `equal`
+
 #### $(call mul,_num1_,_num2_)
  Multiply integer _num1_ with integer _num2_. Both arguments can be signed.
  Numeric bases can be mixed, the result is given in the same base as _num1_.

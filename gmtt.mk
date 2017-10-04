@@ -790,6 +790,37 @@ sub = $(call -sub,$(call -analyze,$1),$(call -analyze,$2),$(findstring -,$1)v$(f
 --sub-v- = $(if $(findstring >,$(-ucmp)),$(call -fmt$3,$(call -sub$3,$(call -shift-merge,$1,$2)),-),$(call -fmt$3,$(call -sub$3,$(call -shift-merge,$2,$1))))
 --subv- = $(call -fmt$3,$(call -add$3,$(call -shift-merge,$1,$2)))
 
+#----------------------------------------------------------------------
+###### $(call cmp,_num1_,_num2_)
+## Compare _num1 with num2_ and emit the characters `<`,`>` or `=`. Both arguments
+## are signed integers. Numeric bases can be mixed.
+## Examples:
+## - `$(call cmp,12,-14)` --> `>`
+## - `$(call cmp,012,10)` --> `=`
+cmp = $(call -cmp,$(call -analyze,$1),$(call -analyze,$2),$(findstring -,$1)v$(findstring -,$2))
+-cmp = $(call --cmp$3,$(call -xpld-$(firstword $1),$(call -nrmlz,$(lastword $1))),$(call -$(firstword $2)to$(firstword $1),$(call -xpld-$(firstword $2),$(call -nrmlz,$(lastword $2)))),$(firstword $1))
+--cmpv = $(-ucmp)
+--cmp-v = <
+--cmp-v- = $(call -ucmp,$2,$1)
+--cmpv- = >
+
+#----------------------------------------------------------------------
+###### $(call int-(le|lt|ge|gt|eq),_num1_,_num2_)
+## Compare _num1 with num2_ and emit the characters `<`,`>`,`=` or the empty string.
+## The postfix alternatives decide which comparison is executed:
+## less-than (lt), less-or-equal (le), greater-than (gt),
+## greater-or-equal (ge) and equal (eq). 
+## Both arguments are signed integers. Numeric bases can be mixed. The result can
+## be used in an $(if ) expression.
+## Examples:
+## - `$(call int-ge,12,-14)` --> `>`
+## - `$(call int-le,12,-14)` --> `` (empty string)
+## - `$(if $(call int-eq,012,10),equal,not equal)` --> `equal`
+int-le = $(filter < =,$(cmp))
+int-lt = $(filter <,$(cmp))
+int-ge = $(filter > =,$(cmp))
+int-gt = $(filter >,$(cmp))
+int-eq = $(filter =,$(cmp))
 
 #----------------------------------------------------------------------
 ###### $(call mul,_num1_,_num2_)

@@ -15,6 +15,8 @@
 # Copyright (c) 2017 Mark Piffer
 #
 
+-gmtt-dbg-args = $(if $(-gmtt-dbg-info),$(info $0($(if $1$2$3$4$5$6,<$1>$(if $2$3$4$5$6,<$2>$(if $3$4$5$6,<$3>$(if $4$5$6,<$4>$(if $5$6,<$5>$(if $6,<$6>)))))))))
+
 
 empty := #    
 false := $(empty)#
@@ -25,19 +27,77 @@ define newline :=
 $(strip)
 $(strip)
 endef
-[A-F] := A B C D E F
-[a-f] := a b c d e f
-[A-Z] := $([A-F]) G H I J K L M N O P Q R S T U V W X Y Z
-[a-z] := $([a-f]) g h i j k l m n o p q r s t u v w x y z
-[0-9] := 0 1 2 3 4 5 6 7 8 9
-[other-chars] := ! " \# $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~ 
+hash := \#
+colon := :#
+equal := =#
 
-hex-chars := $([0-9]) $([a-f]) $([A-F])
-alnum-chars := _ . $([0-9]) $([A-Z]) $([a-z])
--separator := ¤# character 164, used in various functions to compose/decompose strings
--never-matching := ¥# character 165, this is used as a list element that should never appear as a real element
+###### `Character classes`
+## The following make variable carry their character class (as list):
+## `$([upper])` := `A B C D E F G H I J K L M N O P Q R S T U V W X Y Z`
+## `$([lower])` := `a b c d e f g h i j k l m n o p q r s t u v w x y z`
+## `$([digit])` := `0 1 2 3 4 5 6 7 8 9`
+## `$([xdigit])` := `$([digit]) a b c d e f A B C D E F`
+## `$([alpha])` := `$([upper]) $([lower])`
+## `$([alnum])` := `$([digit]) $([alpha])`
+[upper] := A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+[lower] := a b c d e f g h i j k l m n o p q r s t u v w x y z
+[digit] := 0 1 2 3 4 5 6 7 8 9
+[xdigit] := $([digit]) a b c d e f A B C D E F
+[alpha] := $([upper]) $([lower])
+[alnum] := $([digit]) $([alpha])
 
--gmtt-dbg-args = $(if $(-gmtt-dbg-info),$(info $0($(if $1$2$3$4$5$6,<$1>$(if $2$3$4$5$6,<$2>$(if $3$4$5$6,<$3>$(if $4$5$6,<$4>$(if $5$6,<$5>$(if $6,<$6>)))))))))
+
+-separator := Â¤# character 164, used in various functions to compose/decompose strings
+-never-matching := Â¥# character 165, this is used as a list element that should never appear as a real element
+-spacereplace := Â§# takes the place of space characters when needed
+
+#----------------------------------------------------------------------
+###### `$(all-chars-q)`
+## This variable contains all ASCII characters in order,
+## separated by space (which makes the variable also a list)
+## with make special characters in quoted form. That means
+## instead of these characters, the strings:
+##  - `$(space)` for the space character
+##  - `$(hash)` for the hash (#) character
+##  - `$(colon)` for the colon (:) character
+##  - `$(equal)` for the equal (=) character
+## are written in. The purpose of this list or parts of
+## it is to be used in `$(eval)` expressions which would
+## otherwise have uncontrollable side effects due to make
+## interpreting the characters.
+all-chars-q := $$(space) ! " $$(hash) $ % & ' ( ) * + , - . / 0 1 2 3 4 5 6 7 8 9 $$(colon) ; < $$(equal) > ? @ A B C D E F G H I J K L M N O P Q R S T U V W X Y Z [ \ ] ^ _ ` a b c d e f g h i j k l m n o p q r s t u v w x y z { | } ~ 
+# " <- closing quotation mark to end string parsing in some editors :D
+
+#----------------------------------------------------------------------
+###### `$(all-chars)`
+## This variable contains all ASCII characters in order,
+## separated by space (which makes the variable also a list).
+## Note that the make special characters space, colon(:), equal (=)
+## and hash (#) are _not_ escaped which makes this string
+## unsuitable for evaluation by the make parser (mostly `$(eval)`
+## calls). Use this string as parameter for string and character
+## functions (e.g. `$(explode $(all-chars),abc!"%123)`).
+$(eval all-chars := $(all-chars-q))
+
+#----------------------------------------------------------------------
+# List of match characters for globbing separated by space. All special
+# characters quoted and space char replaced by $(-spacereplace)
+-match-chars-q := $(subst $$(space),$(-spacereplace),$(all-chars-q))
+
+#----------------------------------------------------------------------
+# List of match characters for globbing, separated by space. Space
+# replaced by $(-spacereplace)
+$(eval -match-chars := $(-match-chars-q))
+
+#----------------------------------------------------------------------
+# String of all match characters without spaces.
+-match-chars-str := $(call implode,$(-match-chars))
+
+#----------------------------------------------------------------------
+# $(call -match-char-range,_start-char_,_end-char_)
+# Return list of characters in -match-chars starting *behind*
+# start-char up to end-char. Used for glob matching character ranges
+-match-char-range = $(wordlist 2,2147483647,$(call explode,$(-match-chars),$(firstword $(subst $2,$2 ,$(lastword $(subst $1, $1,$(-match-chars-str)))))))
 
 #----------------------------------------------------------------------
 ##### String Functions
@@ -200,16 +260,16 @@ str-match = $(if $(and $(patsubst _$(subst $(space),$(-separator),$(strip $1)),,
 
 #----------------------------------------------------------------------
 ###### $(call uniq-sufx,_list_,_binary-literal_)
-## Add a ¤ (Character 164) and a unique binary number to all elements of the _list_.
+## Add a Â¤ (Character 164) and a unique binary number to all elements of the _list_.
 ## The _binary-literal_ must be present and can be any combination of `0`'s and `1`'s.
-## - `$(call uniq-sufx,The quick brown fox,0)` --> `The¤0 quick¤1 brown¤10 fox¤11`
-## - `$(call uniq-sufx,The quick brown fox,111)` --> `The¤111 quick¤1000 brown¤1001 fox¤1010`
+## - `$(call uniq-sufx,The quick brown fox,0)` --> `TheÂ¤0 quickÂ¤1 brownÂ¤10 foxÂ¤11`
+## - `$(call uniq-sufx,The quick brown fox,111)` --> `TheÂ¤111 quickÂ¤1000 brownÂ¤1001 foxÂ¤1010`
 uniq-sufx = $(if $1,$(firstword $1)$(-separator)$2 $(call uniq-sufx,$(wordlist 2,2147483647,$1),$(call bincnt,$2)))
 
 #----------------------------------------------------------------------
 ###### $(call sort-all,_list_)
 ## Sort a list without dropping duplicates. Built-in `$(sort)` will drop them which
-## is sometimes not what you want. _Note_: list elements must not contain ¤ (Character 164)
+## is sometimes not what you want. _Note_: list elements must not contain Â¤ (Character 164)
 ## as this is character is used internally for processing.
 sort-all = $(foreach i,$(sort $(call uniq-sufx,$1,0)),$(firstword $(subst $(-separator), ,$(i))))
 
@@ -933,7 +993,7 @@ fill-up = $(call bit-or,$1,$(call sub,$2,1))
 # Retrieve one table line as a $(-separator) separated record
 # $1 - table
 # $2 - table width
-# - chop-rec(1 2 3 4 5 6,3) -> 1¤2¤3  4¤5¤6
+# - chop-rec(1 2 3 4 5 6,3) -> 1Â¤2Â¤3  4Â¤5Â¤6
 -chop-rec = $(call --chop-rec,$1,$2,$(call -uadd10,$2,1))
 --chop-rec = $(if $1,$(subst $(space),$(-separator),$(wordlist 1,$2,$1)) $(call --chop-rec,$(wordlist $3,2147483647,$1),$2,$3))
 
@@ -942,7 +1002,7 @@ fill-up = $(call bit-or,$1,$(call sub,$2,1))
 # This means that if the first key would be sorted to position 15,
 # then in the returned list at position 15 there will be a 1.
 # These numbers can be directly used as index in the $(wordlist) function.
-# Character 164('¤') is used as separator and is forbidden in key columns.
+# Character 164('Â¤') is used as separator and is forbidden in key columns.
 # $1 - list of keys before sorting
 # $2 - table width
 -sort-ix = $(foreach i,$(filter-out %$(-separator),$(subst $(-separator),$(-separator) ,$(sort $(join $1,$(call -bld-ix,$1,$(-separator)))))),$(call -uadd10,1,$(call -umul10,$(i),$2)))

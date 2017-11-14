@@ -259,6 +259,60 @@ str-match = $(if $(and $(patsubst _$(subst $(space),$(-separator),$(strip $1)),,
 
 
 #----------------------------------------------------------------------
+# $(call -glob-match-X,_string_,_pattern_)
+# Match the character X against the first character of _string_. If
+# they match, recursively call -glob-match-Y, with Y being the next
+# character from _pattern_. On match failure, return false (empty string).
+# The particular functions are generated out of the list of characters.
+$(foreach c,$(-match-chars-q),$(eval -glob-match-$(c) = $$(if $$1,$$(if $$(findstring $$(firstword $$1),$(c)),$$(call -glob-match-$$(firstword $$2),$$(wordlist 2,1000,$$1),$$(wordlist 2,1000,$$2))))))
+# Rewrite the matching functions for special characters in a glob pattern
+# End of pattern:
+-glob-match- = $(if $1,,t)
+# Asterisk - First try if the * matches the empty string and recurse
+# with the next character from the _pattern_. If that fails, consume
+# one character from _string_ and try again.
+-glob-match-* = $(if $1,$(if $(call -glob-match-$(firstword $2),$1,$(wordlist 2,1000,$2)),t,$(call -glob-match-*,$(wordlist 2,1000,$1),$2)),$(if $2,,t))
+# Question mark - consume one character from _string_. Fails only if
+# _string_ is already empty.
+-glob-match-? = $(if $1,$(call -glob-match-$(firstword $2),$(wordlist 2,1000,$1),$(wordlist 2,1000,$2)))
+# Opening brackets - start a [] sequence for character (range) selection and match it
+-glob-match-[ = $(if $1,$(if $(findstring !,$(firstword $2)),$(call -neg-bracket-enter,$1,$(wordlist 2,1000,$2)),$(call -bracket-enter,$1,$2)))
+# $(call bracket-...,_string_,_pattern_,_bracket-chars-so-far_)
+# The bracket- and neg-bracket- functions step through a bracket
+# expression an accumulate the characters and character ranges
+# in _bracket-chars-so-far_ until the closing ']' is encountered.
+-bracket-enter = $(call -bracket-cont,$1,$(wordlist 2,1000,$2),$(firstword $2))
+-neg-bracket-enter = $(call -neg-bracket-cont,$1,$(wordlist 2,1000,$2),$(firstword $2))
+-bracket-cont = $(if $(findstring ],$(firstword $2)),$(call -bracket-match,$1,$(wordlist 2,1000,$2),$3),$(if $(findstring -,$(firstword $2)),$(if $(findstring ],$(word 2,$2)),$(call -bracket-match,$1,$(wordlist 3,1000,$2),$3 -),$(call -bracket-cont,$1,$(wordlist 3,1000,$2),$3 $(call -match-char-range,$(lastword $3),$(word 2,$2)))),$(call -bracket-cont,$1,$(wordlist 2,1000,$2),$3 $(firstword $2))))
+-neg-bracket-cont = $(if $(findstring ],$(firstword $2)),$(call -neg-bracket-match,$1,$(wordlist 2,1000,$2),$3),$(if $(findstring -,$(firstword $2)),$(if $(findstring ],$(word 2,$2)),$(call -neg-bracket-match,$1,$(wordlist 3,1000,$2),$3 -),$(call -neg-bracket-cont,$1,$(wordlist 3,1000,$2),$3 $(call -match-char-range,$(lastword $3),$(word 2,$2)))),$(call -neg-bracket-cont,$1,$(wordlist 2,1000,$2),$3 $(firstword $2))))
+# bracket-match finally tries to match the first character in
+# _string_ against the accumulated _bracket-chars-so-far_ and
+# if succeeding, continues recursively with -glob-match-Y 
+-neg-bracket-match = $(if $(findstring $(firstword $1),$3),,$(call -glob-match-$(firstword $2),$(wordlist 2,1000,$1),$(wordlist 2,1000,$2)))
+-bracket-match = $(if $(findstring $(firstword $1),$3),$(call -glob-match-$(firstword $2),$(wordlist 2,1000,$1),$(wordlist 2,1000,$2)))
+
+#----------------------------------------------------------------------
+###### $(call glob-match,_string_,_pattern_)
+## Try to match the _string_ with the _pattern_, applying glob-syntax.
+## Glob-syntax is well known from the shell and
+## https://en.wikipedia.org/wiki/Glob_(programming)
+## All characters match themselves except:
+## -  `*` - zero or more arbitrary chars
+## -  `?` - exactly one arbitrary char
+## -  `[]` - exactly one character from the set designated inside the brackets:
+##    - `[abc]` - explicit, matches one of `a`, `b` or `c`
+##    - `[a-z]` - range, matches one of `a`,`b`...`z`. The
+##                possibly ranges can be taken from `$(all-chars)`
+##    - `[]abc]` - first position is the only way to match a `]`
+##    - `[-abc]` - first or last position is the only way to match a `-`
+##    - `[!a-z]` - `!` inverts the match, i.e. everything but `a`..`z`
+## Examples:
+## - `$(call glob-match,Linux 2.6.32-431.el6.i686,Linux 2.6.*.i686)` --> `t`
+## - `$(call glob-match,down/to/unknown/dir/file.txt,down/*/*/*/*.txt)` --> `t`
+glob-match = $(call -glob-match,$(call explode,$(-match-chars),$(subst $(space),$(spacereplace),$1)),$(call explode,$(-match-chars),$(subst $(space),$(spacereplace),$2)))
+-glob-match = $(call -glob-match-$(firstword $2),$1,$(wordlist 2,1000,$2))
+
+#----------------------------------------------------------------------
 ###### $(call uniq-sufx,_list_,_binary-literal_)
 ## Add a ¤ (Character 164) and a unique binary number to all elements of the _list_.
 ## The _binary-literal_ must be present and can be any combination of `0`'s and `1`'s.

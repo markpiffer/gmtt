@@ -66,8 +66,9 @@ are not.
 - round up to a power of 2
 - round down to a power of 2
 
-### Function List
+## Function List
 
+### String functions
 
 #### $(call explode,_stringlist_,_string_)
  Insert a blank after every occurrence of the strings from _stringlist_ in _string_.
@@ -169,6 +170,26 @@ are not.
  - `$(call str-match,MickeyMouse,MickeyMouse%))` --> `t`
  - `$(call str-match,,%))` --> `t`
 
+#### $(call glob-match,_string_,_pattern_)                                   
+ Try to match the _string_ with the _pattern_, applying glob-syntax.         
+ Glob-syntax is well known from the shell and                                
+ https://en.wikipedia.org/wiki/Glob_(programming)                            
+ All characters match themselves except:                                     
+ -  `*` - zero or more arbitrary chars                                       
+ -  `?` - exactly one arbitrary char                                         
+ -  `[]` - exactly one character from the set designated inside the brackets:
+    - `[abc]` - explicit, matches one of `a`, `b` or `c`                     
+    - `[a-z]` - range, matches one of `a`,`b`...`z`. The                     
+                possibly ranges can be taken from `$(all-chars)`             
+    - `[]abc]` - first position is the only way to match a `]`               
+    - `[-abc]` - first or last position is the only way to match a `-`       
+    - `[!a-z]` - `!` inverts the match, i.e. everything but `a`..`z`         
+ Examples:                                                                   
+ - `$(call glob-match,Linux 2.6.32-431.el6.i686,Linux 2.6.*.i686)` --> `t`   
+ - `$(call glob-match,down/to/unknown/dir/file.txt,down/*/*/*/*.txt)` --> `t`
+ 
+### List functions
+
 #### $(call uniq-sufx,_list_,_binary-literal_)
  Add a ¤ (Character 164) and a unique binary number to all elements of the _list_.
  The _binary-literal_ must be present and can be any combination of `0`'s and `1`'s.
@@ -238,6 +259,8 @@ are not.
  Examples:
  - `$(call down-from,baz,foo baz bar baz)` -> `foo baz bar`
  - `$(call down-from,foo,foo bar baz)` -> ` ` (empty list)
+
+### Arithmetic functions
 
 #### $(call add,_num1_,_num2_)
  Calculate _num1+num2_. Both arguments are signed integers.

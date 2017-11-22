@@ -22,14 +22,17 @@ empty := #
 false := $(empty)#
 space := $(strip) $(strip)#
 empty-cell := $$(space)
-comma := ,#
 define newline :=
 $(strip)
 $(strip)
 endef
-hash := \#
+comma := ,#
+hash := \##
 colon := :#
 equal := =#
+paropen := (#
+parclose := )#
+semicolon := ;#
 
 ###### `Character classes`
 ## The following make variable carry their character class (as list):

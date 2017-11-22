@@ -28,6 +28,7 @@ $(strip)
 endef
 comma := ,#
 hash := \##
+percent := %#
 colon := :#
 equal := =#
 paropen := (#

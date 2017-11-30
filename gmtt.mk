@@ -83,25 +83,6 @@ all-chars-q := $$(space) ! " $$(hash) $ % & ' ( ) * + , - . / 0 1 2 3 4 5 6 7 8 
 ## functions (e.g. `$(explode $(all-chars),abc!"%123)`).
 $(eval all-chars := $(all-chars-q))
 
-#----------------------------------------------------------------------
-# List of match characters for globbing separated by space. All special
-# characters quoted and space char replaced by $(-spacereplace)
--match-chars-q := $(subst $$(space),$(-spacereplace),$(all-chars-q))
-
-#----------------------------------------------------------------------
-# List of match characters for globbing, separated by space. Space
-# replaced by $(-spacereplace)
-$(eval -match-chars := $(-match-chars-q))
-
-#----------------------------------------------------------------------
-# String of all match characters without spaces.
--match-chars-str := $(call implode,$(-match-chars))
-
-#----------------------------------------------------------------------
-# $(call -match-char-range,_start-char_,_end-char_)
-# Return list of characters in -match-chars starting *behind*
-# start-char up to end-char. Used for glob matching character ranges
--match-char-range = $(wordlist 2,2147483647,$(call explode,$(-match-chars),$(firstword $(subst $2,$2 ,$(lastword $(subst $1, $1,$(-match-chars-str)))))))
 
 #----------------------------------------------------------------------
 ##### String Functions
@@ -128,6 +109,33 @@ explode = $(if $1,$(subst $(firstword $1),$(firstword $1) ,$(call explode,$(word
 ## characters and therefore takes all spaces verbatim.
 ## - `$(call implode,some\ awkward\ Windows\ path)` --> `some\awkward\Windows\path`
 implode = $(subst $(space),$2,$(strip $1))
+
+-upper- := $(call implode,$([upper]))
+-lower- := $(call implode,$([lower]))
+-digit- := $(call implode,$([digit]))
+-xdigit- := $(call implode,$([xdigit]))
+-alpha- := $(call implode,$([alpha]))
+-alnum- := $(call implode,$([alnum]))
+
+#----------------------------------------------------------------------
+# List of match characters for globbing separated by space. All special
+# characters quoted and space char replaced by $(-spacereplace)
+-match-chars-q := $(subst $$(space),$(-spacereplace),$(all-chars-q))
+
+#----------------------------------------------------------------------
+# List of match characters for globbing, separated by space. Space
+# replaced by $(-spacereplace)
+$(eval -match-chars := $(-match-chars-q))
+
+#----------------------------------------------------------------------
+# String of all match characters without spaces.
+-match-chars-str := $(call implode,$(-match-chars))
+
+#----------------------------------------------------------------------
+# $(call -match-char-range,_start-char_,_end-char_)
+# Return list of characters in -match-chars starting *behind*
+# start-char up to end-char. Used for glob matching character ranges
+-match-char-range = $(wordlist 2,2147483647,$(call explode,$(-match-chars),$(firstword $(subst $2,$2 ,$(lastword $(subst $1, $1,$(-match-chars-str)))))))
 
 #----------------------------------------------------------------------
 # Repeat a string for 2^N times. N is given in the form of a list with length N.
@@ -181,7 +189,7 @@ interval = $(eval -interval := $1)$(foreach i,$(call n-list,_,$2),$(-interval)$(
 ## Expample:
 ## - `$(call lpad,123,7,0)` --> `0000123`
 ## - `$(call lpad,123,7,-)` --> `----123`
-lpad = $(call implode,$(wordlist $(words _ $(call explode,$(alnum-chars),$1)),$2,$(call n-list,$3,$2)))$1
+lpad = $(call implode,$(wordlist $(words _ $(call explode,$([alnum]),$1)),$2,$(call n-list,$3,$2)))$1
 
 #----------------------------------------------------------------------
 ###### $(call lstrip,_string_,_prefix_)
@@ -315,6 +323,31 @@ $(foreach c,$(-match-chars-q),$(eval -glob-match-$(c) = $$(if $$1,$$(if $$(finds
 ## - `$(call glob-match,down/to/unknown/dir/file.txt,down/*/*/*/*.txt)` --> `t`
 glob-match = $(call -glob-match,$(call explode,$(-match-chars),$(subst $(space),$(spacereplace),$1)),$(call explode,$(-match-chars),$(subst $(space),$(spacereplace),$2)))
 -glob-match = $(call -glob-match-$(firstword $2),$1,$(wordlist 2,1000,$2))
+
+
+###### `$(call dissect,_string_,_group-string_[,_group-string_[,_group-string_[,_group-string_]]])`
+## Dissect given _string_ into chunks of characters of the same
+## group. Each character in the string is tested for membership in the
+## group-strings and glued to its neighbours if they are in the same
+## group. This function mainly is there to cut formated alphanumeric
+## strings apart.  Each identified chunk is lead by the name (first
+## member) of its corresponding group string therefor groups must be
+## given as a _name characters_ tuple.  The _name_ is given back as
+## indicator before each of the identified chunks (see examples)
+## Example: `$(call dissect,Linux 4.13.0-17-generic,A $(-alpha-),1 $(-digit-),. .-%?)` --> `A Linux 1 4 . . 1 13 . . 1 0 . - 1 17 . - A generic`
+## `$(call dissect,Nov 30 18:43:22 CET 2017,alpha $(-alpha-),num $(-digit-),separator :)` --> ` alpha Nov num 3018 separator : num 43 separator : num 22 alpha CET num 2017` 
+dissect = $(-gmtt-dbg-args)$(call -dissect,$(call explode,$(all-chars) $(spacereplace) $(separator) $(never-matching),$1),,$2,$3,$4,$5)
+# $1 - string to dissect
+# $2 - result list with marked & dissected string parts
+# $3 - 1st string group
+# $4 - 2nd string group (optional)
+# $5 - 3rd string group (optional)
+# $6 - 4th string group (optional)
+-dissect = $(if $1,$(if $(findstring $(firstword $1),$(lastword $3)),$(call -dissect-3,$(wordlist 2,2147483647,$1),$2 $(firstword $3) $(firstword $1),$3,$4,$5,$6),$(if $(findstring $(firstword $1),$(lastword $4)),$(call -dissect-4,$(wordlist 2,2147483647,$1),$2 $(firstword $4) $(firstword $1),$3,$4,$5,$6),$(if $(findstring $(firstword $1),$(lastword $5)),$(call -dissect-5,$(wordlist 2,2147483647,$1),$2 $(firstword $5) $(firstword $1),$3,$4,$5,$6),$(if $(findstring $(firstword $1),$(lastword $6)),$(call -dissect-6,$(wordlist 2,2147483647,$1),$2 $(firstword $6) $(firstword $1),$3,$4,$5,$6),$(call -dissect,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$6))))),$2)
+-dissect-3 = $(if $(findstring $(firstword $1),$(lastword $3)),$(call -dissect-3,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -dissect,$1,$2,$3,$4,$5,$6))
+-dissect-4 = $(if $(findstring $(firstword $1),$(lastword $4)),$(call -dissect-4,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -dissect,$1,$2,$3,$4,$5,$6))
+-dissect-5 = $(if $(findstring $(firstword $1),$(lastword $5)),$(call -dissect-5,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -dissect,$1,$2,$3,$4,$5,$6))
+-dissect-6 = $(if $(findstring $(firstword $1),$(lastword $6)),$(call -dissect-6,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -dissect,$1,$2,$3,$4,$5,$6))
 
 #----------------------------------------------------------------------
 ###### $(call uniq-sufx,_list_,_binary-literal_)

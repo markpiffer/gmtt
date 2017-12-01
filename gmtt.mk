@@ -118,6 +118,20 @@ implode = $(subst $(space),$2,$(strip $1))
 -alnum- := $(call implode,$([alnum]))
 
 #----------------------------------------------------------------------
+###### $(call spc-mask,_string_)
+## Replace all occurrences of space in the given string with the
+## `$(-spacereplace)` character. This function can be used to convert
+## strings with spaces into valid list elements (which must not contain
+## spaces). 
+spc-mask = $(subst $(space),$(-spacereplace),$1)
+
+###### $(call spc-unmask,_string_)
+## Replace all occurrences of the character `$(-spacereplace)` with a
+## true space character. The inverse of the `spc-mask` function.
+spc-unmask = $(subst $(-spacereplace),$(space),$1)
+
+
+#----------------------------------------------------------------------
 # List of match characters for globbing separated by space. All special
 # characters quoted and space char replaced by $(-spacereplace)
 -match-chars-q := $(subst $$(space),$(-spacereplace),$(all-chars-q))
@@ -163,6 +177,13 @@ n-list = $(if $(word $2,$1),$(wordlist 1,$2,$1),$(call n-list,$1 $1,$2))
 ## Leading zeros are preserved.
 ## - `$(call bincnt,010011)` -> `010100`
 bincnt = $(if $1,$(if $(patsubst %1,,$1),$(patsubst %0,%1,$1),$(call bincnt,$(patsubst %1,%,$1))0),1)
+
+#----------------------------------------------------------------------
+###### $(call deccnt,_decimal-literal_)
+## Count the _decimal-literal_ up by 1, yielding the following decimal literal.
+## Leading zeros are preserved.
+## - `$(call deccnt,0099)` -> `0100`
+deccnt = $(if $1,$(if $(patsubst %9,,$1),$(if $(patsubst %8,,$1),$(if $(patsubst %7,,$1),$(if $(patsubst %6,,$1),$(if $(patsubst %5,,$1),$(if $(patsubst %4,,$1),$(if $(patsubst %3,,$1),$(if $(patsubst %2,,$1),$(if $(patsubst %1,,$1),$(patsubst %0,%1,$1),$(patsubst %1,%2,$1)),$(patsubst %2,%3,$1)),$(patsubst %3,%4,$1)),$(patsubst %4,%5,$1)),$(patsubst %5,%6,$1)),$(patsubst %6,%7,$1)),$(patsubst %7,%8,$1)),$(patsubst %8,%9,$1)),$(call dec-cnt,$(patsubst %9,%,$1))0),1)
 
 #----------------------------------------------------------------------
 ###### $(call symgen)
@@ -276,32 +297,32 @@ str-match = $(if $(and $(patsubst _$(subst $(space),$(-separator),$(strip $1)),,
 # they match, recursively call -glob-match-Y, with Y being the next
 # character from _pattern_. On match failure, return false (empty string).
 # The particular functions are generated out of the list of characters.
-$(foreach c,$(-match-chars-q),$(eval -glob-match-$(c) = $$(if $$1,$$(if $$(findstring $$(firstword $$1),$(c)),$$(call -glob-match-$$(firstword $$2),$$(wordlist 2,1000,$$1),$$(wordlist 2,1000,$$2))))))
+$(foreach c,$(-match-chars-q),$(eval -glob-match-$(c) = $$(if $$1,$$(if $$(findstring $$(firstword $$1),$(c)),$$(call -glob-match-$$(firstword $$2),$$(wordlist 2,2147483647,$$1),$$(wordlist 2,2147483647,$$2))))))
 # Rewrite the matching functions for special characters in a glob pattern
 # End of pattern:
 -glob-match- = $(if $1,,t)
 # Asterisk - First try if the * matches the empty string and recurse
 # with the next character from the _pattern_. If that fails, consume
 # one character from _string_ and try again.
--glob-match-* = $(if $1,$(if $(call -glob-match-$(firstword $2),$1,$(wordlist 2,1000,$2)),t,$(call -glob-match-*,$(wordlist 2,1000,$1),$2)),$(if $2,,t))
+-glob-match-* = $(if $1,$(if $(call -glob-match-$(firstword $2),$1,$(wordlist 2,2147483647,$2)),t,$(call -glob-match-*,$(wordlist 2,2147483647,$1),$2)),$(if $2,,t))
 # Question mark - consume one character from _string_. Fails only if
 # _string_ is already empty.
--glob-match-? = $(if $1,$(call -glob-match-$(firstword $2),$(wordlist 2,1000,$1),$(wordlist 2,1000,$2)))
+-glob-match-? = $(if $1,$(call -glob-match-$(firstword $2),$(wordlist 2,2147483647,$1),$(wordlist 2,2147483647,$2)))
 # Opening brackets - start a [] sequence for character (range) selection and match it
--glob-match-[ = $(if $1,$(if $(findstring !,$(firstword $2)),$(call -neg-bracket-enter,$1,$(wordlist 2,1000,$2)),$(call -bracket-enter,$1,$2)))
+-glob-match-[ = $(if $1,$(if $(findstring !,$(firstword $2)),$(call -neg-bracket-enter,$1,$(wordlist 2,2147483647,$2)),$(call -bracket-enter,$1,$2)))
 # $(call bracket-...,_string_,_pattern_,_bracket-chars-so-far_)
 # The bracket- and neg-bracket- functions step through a bracket
 # expression an accumulate the characters and character ranges
 # in _bracket-chars-so-far_ until the closing ']' is encountered.
--bracket-enter = $(call -bracket-cont,$1,$(wordlist 2,1000,$2),$(firstword $2))
--neg-bracket-enter = $(call -neg-bracket-cont,$1,$(wordlist 2,1000,$2),$(firstword $2))
--bracket-cont = $(if $(findstring ],$(firstword $2)),$(call -bracket-match,$1,$(wordlist 2,1000,$2),$3),$(if $(findstring -,$(firstword $2)),$(if $(findstring ],$(word 2,$2)),$(call -bracket-match,$1,$(wordlist 3,1000,$2),$3 -),$(call -bracket-cont,$1,$(wordlist 3,1000,$2),$3 $(call -match-char-range,$(lastword $3),$(word 2,$2)))),$(call -bracket-cont,$1,$(wordlist 2,1000,$2),$3 $(firstword $2))))
--neg-bracket-cont = $(if $(findstring ],$(firstword $2)),$(call -neg-bracket-match,$1,$(wordlist 2,1000,$2),$3),$(if $(findstring -,$(firstword $2)),$(if $(findstring ],$(word 2,$2)),$(call -neg-bracket-match,$1,$(wordlist 3,1000,$2),$3 -),$(call -neg-bracket-cont,$1,$(wordlist 3,1000,$2),$3 $(call -match-char-range,$(lastword $3),$(word 2,$2)))),$(call -neg-bracket-cont,$1,$(wordlist 2,1000,$2),$3 $(firstword $2))))
+-bracket-enter = $(call -bracket-cont,$1,$(wordlist 2,2147483647,$2),$(firstword $2))
+-neg-bracket-enter = $(call -neg-bracket-cont,$1,$(wordlist 2,2147483647,$2),$(firstword $2))
+-bracket-cont = $(if $(findstring ],$(firstword $2)),$(call -bracket-match,$1,$(wordlist 2,2147483647,$2),$3),$(if $(findstring -,$(firstword $2)),$(if $(findstring ],$(word 2,$2)),$(call -bracket-match,$1,$(wordlist 3,2147483647,$2),$3 -),$(call -bracket-cont,$1,$(wordlist 3,2147483647,$2),$3 $(call -match-char-range,$(lastword $3),$(word 2,$2)))),$(call -bracket-cont,$1,$(wordlist 2,2147483647,$2),$3 $(firstword $2))))
+-neg-bracket-cont = $(if $(findstring ],$(firstword $2)),$(call -neg-bracket-match,$1,$(wordlist 2,2147483647,$2),$3),$(if $(findstring -,$(firstword $2)),$(if $(findstring ],$(word 2,$2)),$(call -neg-bracket-match,$1,$(wordlist 3,2147483647,$2),$3 -),$(call -neg-bracket-cont,$1,$(wordlist 3,2147483647,$2),$3 $(call -match-char-range,$(lastword $3),$(word 2,$2)))),$(call -neg-bracket-cont,$1,$(wordlist 2,2147483647,$2),$3 $(firstword $2))))
 # bracket-match finally tries to match the first character in
 # _string_ against the accumulated _bracket-chars-so-far_ and
 # if succeeding, continues recursively with -glob-match-Y 
--neg-bracket-match = $(if $(findstring $(firstword $1),$3),,$(call -glob-match-$(firstword $2),$(wordlist 2,1000,$1),$(wordlist 2,1000,$2)))
--bracket-match = $(if $(findstring $(firstword $1),$3),$(call -glob-match-$(firstword $2),$(wordlist 2,1000,$1),$(wordlist 2,1000,$2)))
+-neg-bracket-match = $(if $(findstring $(firstword $1),$3),,$(call -glob-match-$(firstword $2),$(wordlist 2,2147483647,$1),$(wordlist 2,2147483647,$2)))
+-bracket-match = $(if $(findstring $(firstword $1),$3),$(call -glob-match-$(firstword $2),$(wordlist 2,2147483647,$1),$(wordlist 2,2147483647,$2)))
 
 #----------------------------------------------------------------------
 ###### $(call glob-match,_string_,_pattern_)
@@ -322,32 +343,50 @@ $(foreach c,$(-match-chars-q),$(eval -glob-match-$(c) = $$(if $$1,$$(if $$(finds
 ## - `$(call glob-match,Linux 2.6.32-431.el6.i686,Linux 2.6.*.i686)` --> `t`
 ## - `$(call glob-match,down/to/unknown/dir/file.txt,down/*/*/*/*.txt)` --> `t`
 glob-match = $(call -glob-match,$(call explode,$(-match-chars),$(subst $(space),$(spacereplace),$1)),$(call explode,$(-match-chars),$(subst $(space),$(spacereplace),$2)))
--glob-match = $(call -glob-match-$(firstword $2),$1,$(wordlist 2,1000,$2))
+-glob-match = $(call -glob-match-$(firstword $2),$1,$(wordlist 2,2147483647,$2))
 
 
-###### `$(call dissect,_string_,_group-string_[,_group-string_[,_group-string_[,_group-string_]]])`
+###### `$(call chop-str,_string_,_group-string_[,_group-string_[,_group-string_[,_group-string_]]])`
 ## Dissect given _string_ into chunks of characters of the same
 ## group. Each character in the string is tested for membership in the
-## group-strings and glued to its neighbours if they are in the same
-## group. This function mainly is there to cut formated alphanumeric
-## strings apart.  Each identified chunk is lead by the name (first
-## member) of its corresponding group string therefor groups must be
-## given as a _name characters_ tuple.  The _name_ is given back as
-## indicator before each of the identified chunks (see examples)
-## Example: `$(call dissect,Linux 4.13.0-17-generic,A $(-alpha-),1 $(-digit-),. .-%?)` --> `A Linux 1 4 . . 1 13 . . 1 0 . - 1 17 . - A generic`
-## `$(call dissect,Nov 30 18:43:22 CET 2017,alpha $(-alpha-),num $(-digit-),separator :)` --> ` alpha Nov num 3018 separator : num 43 separator : num 22 alpha CET num 2017` 
-dissect = $(-gmtt-dbg-args)$(call -dissect,$(call explode,$(all-chars) $(spacereplace) $(separator) $(never-matching),$1),,$2,$3,$4,$5)
+## group-strings and stays glued to its neighbours if they are in the same
+## group. If the groups are different a space is inserted. This function
+## mainly serves to cut formated alphanumeric strings apart.
+## In the output string each chunk is prepended with the identifier (first
+## member) of its corresponding group string therefore groups must be
+## given as a `_identifier characters_` tuple.  The _identifier_ is given back as
+## indicator before each of the separated chunks (see examples). If
+## a character from the string is not found in any of the group strings,
+## it is dropped but still separates chunks.
+## *How to handle strings with spaces*: if you don't need the spaces
+## after parsing (spaces only separate the string parts) then you don't
+## have to do anything, simply call the function with the string as parameter.
+## If you want to preserve spaces, then you must call `chop-str-spc` which
+## will leave behind the same list of string parts _but with spaces still
+## replaced by an internal character_. The space character is handled as if
+## it is part of the first _group-string_ so all sequences of characters
+## from the first group which are separated by space will become one chunk.
+## This way you can still handle the function result as a list after calling.
+## When stepping through this list you can remove the internal character by simply 
+## applying `$(call spc-unmask,_string-chunk-from-result_)`.
+## Examples:
+## - `$(call chop-str,Linux 4.13.0-17-generic,A $(-alpha-),1 $(-digit-),. .-+?)` --> ` A Linux 1 4 . . 1 13 . . 1 0 . - 1 17 . - A generic`
+## - `$(call chop-str,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-),num $(-digit-),sep :)` --> ` alpha Thu alpha Nov num 30 num 18 sep : num 43 sep : num 22 alpha CET num 2017`
+## - `$(call chop-str-spc,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-),num $(-digit-),sep :)` --> ` alpha Thu§Nov§ num 30 alpha § num 18 sep : num 43 sep : num 22 alpha §CET§ num 2017`
+chop-str = $(call -chop-str,$(call explode,$(all-chars) $(-spacereplace) $(-separator) $(-never-matching),$(subst $(space),$(-never-matching),$1)),,$2,$3,$4,$5)
+chop-str-spc = $(call chop-str,$(call spc-mask,$1),$2$(-spacereplace),$3,$4,$5)
+
 # $1 - string to dissect
 # $2 - result list with marked & dissected string parts
 # $3 - 1st string group
 # $4 - 2nd string group (optional)
 # $5 - 3rd string group (optional)
 # $6 - 4th string group (optional)
--dissect = $(if $1,$(if $(findstring $(firstword $1),$(lastword $3)),$(call -dissect-3,$(wordlist 2,2147483647,$1),$2 $(firstword $3) $(firstword $1),$3,$4,$5,$6),$(if $(findstring $(firstword $1),$(lastword $4)),$(call -dissect-4,$(wordlist 2,2147483647,$1),$2 $(firstword $4) $(firstword $1),$3,$4,$5,$6),$(if $(findstring $(firstword $1),$(lastword $5)),$(call -dissect-5,$(wordlist 2,2147483647,$1),$2 $(firstword $5) $(firstword $1),$3,$4,$5,$6),$(if $(findstring $(firstword $1),$(lastword $6)),$(call -dissect-6,$(wordlist 2,2147483647,$1),$2 $(firstword $6) $(firstword $1),$3,$4,$5,$6),$(call -dissect,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$6))))),$2)
--dissect-3 = $(if $(findstring $(firstword $1),$(lastword $3)),$(call -dissect-3,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -dissect,$1,$2,$3,$4,$5,$6))
--dissect-4 = $(if $(findstring $(firstword $1),$(lastword $4)),$(call -dissect-4,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -dissect,$1,$2,$3,$4,$5,$6))
--dissect-5 = $(if $(findstring $(firstword $1),$(lastword $5)),$(call -dissect-5,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -dissect,$1,$2,$3,$4,$5,$6))
--dissect-6 = $(if $(findstring $(firstword $1),$(lastword $6)),$(call -dissect-6,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -dissect,$1,$2,$3,$4,$5,$6))
+-chop-str = $(-gmtt-dbg-args)$(if $1,$(if $(findstring $(firstword $1),$(lastword $3)),$(call -chop-str-3,$(wordlist 2,2147483647,$1),$2 $(firstword $3)$(-separator)$(firstword $1),$3,$4,$5,$6),$(if $(findstring $(firstword $1),$(lastword $4)),$(call -chop-str-4,$(wordlist 2,2147483647,$1),$2 $(firstword $4)$(-separator)$(firstword $1),$3,$4,$5,$6),$(if $(findstring $(firstword $1),$(lastword $5)),$(call -chop-str-5,$(wordlist 2,2147483647,$1),$2 $(firstword $5)$(-separator)$(firstword $1),$3,$4,$5,$6),$(if $(findstring $(firstword $1),$(lastword $6)),$(call -chop-str-6,$(wordlist 2,2147483647,$1),$2 $(firstword $6)$(-separator)$(firstword $1),$3,$4,$5,$6),$(call -chop-str,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$6))))),$2)
+-chop-str-3 = $(-gmtt-dbg-args)$(if $(findstring $(firstword $1),$(lastword $3)),$(call -chop-str-3,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -chop-str,$1,$2,$3,$4,$5,$6))
+-chop-str-4 = $(-gmtt-dbg-args)$(if $(findstring $(firstword $1),$(lastword $4)),$(call -chop-str-4,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -chop-str,$1,$2,$3,$4,$5,$6))
+-chop-str-5 = $(-gmtt-dbg-args)$(if $(findstring $(firstword $1),$(lastword $5)),$(call -chop-str-5,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -chop-str,$1,$2,$3,$4,$5,$6))
+-chop-str-6 = $(-gmtt-dbg-args)$(if $(findstring $(firstword $1),$(lastword $6)),$(call -chop-str-6,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -chop-str,$1,$2,$3,$4,$5,$6))
 
 #----------------------------------------------------------------------
 ###### $(call uniq-sufx,_list_,_binary-literal_)
@@ -378,6 +417,18 @@ rev-list = $(strip $(call -rev-list,$1,1073741824 1073741825 536870912 536870913
 ## there is no comma at the start and end of the list.
 ## - `$(call list2param,The   quick brown   fox)` --> `The,quick,brown,fox`
 list2param = $(subst $(space),$(comma),$(strip $1))
+
+###### $(call clear-pfx-list,_prefixed-list_)
+## Clear the prefixes from a prefix list. A prefix list
+## is a make list with a prefix name prepended to each list
+## element and the internal character `$(-separator)` between them
+## e.g. `alpha¤Linux  num¤4  dot¤.  num¤2`. 
+clear-pfx-list = $(filter-out %$(-separator),$(subst $(-separator),$(-separator) ,$1))
+
+# $1 - typed value list ("type val" tuples)
+# $2 - type name
+# $3 - optional index
+get-type-val = $(-gmtt-dbg-args)$(word $(call deccnt,$3),$(call clear-pfx-list,$(filter $2$(-separator)%,$1)))
 
 #----------------------------------------------------------------------
 ###### $(call exec,_quoted-func_,_params_)
@@ -1096,7 +1147,7 @@ fill-up = $(call bit-or,$1,$(call sub,$2,1))
 # Character 164('¤') is used as separator and is forbidden in key columns.
 # $1 - list of keys before sorting
 # $2 - table width
--sort-ix = $(foreach i,$(filter-out %$(-separator),$(subst $(-separator),$(-separator) ,$(sort $(join $1,$(call -bld-ix,$1,$(-separator)))))),$(call -uadd10,1,$(call -umul10,$(i),$2)))
+-sort-ix = $(foreach i,$(call clear-pfx-list,$(sort $(join $1,$(call -bld-ix,$1,$(-separator))))),$(call -uadd10,1,$(call -umul10,$(i),$2)))
 
 #----------------------------------------------------------------------
 # Generate a list of reversely sorted indexes from the given unsorted keys.

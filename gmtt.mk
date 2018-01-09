@@ -172,25 +172,25 @@ $(eval -match-chars := $(-match-chars-q))
 n-list = $(if $(word $2,$1),$(wordlist 1,$2,$1),$(call n-list,$1 $1,$2))
 
 #----------------------------------------------------------------------
-###### $(call bincnt,_binary-literal_)
+###### $(call binary-inc,_binary-literal_)
 ## Count the _binary-literal_ up by 1, yielding the following binary literal.
 ## Leading zeros are preserved.
-## - `$(call bincnt,010011)` -> `010100`
-bincnt = $(if $1,$(if $(patsubst %1,,$1),$(patsubst %0,%1,$1),$(call bincnt,$(patsubst %1,%,$1))0),1)
+## - `$(call binary-inc,010011)` -> `010100`
+binary-inc = $(if $1,$(if $(patsubst %1,,$1),$(patsubst %0,%1,$1),$(call binary-inc,$(patsubst %1,%,$1))0),1)
 
 #----------------------------------------------------------------------
-###### $(call deccnt,_decimal-literal_)
+###### $(call decimal-inc,_decimal-literal_)
 ## Count the _decimal-literal_ up by 1, yielding the following decimal literal.
 ## Leading zeros are preserved.
-## - `$(call deccnt,0099)` -> `0100`
-deccnt = $(if $1,$(if $(patsubst %9,,$1),$(if $(patsubst %8,,$1),$(if $(patsubst %7,,$1),$(if $(patsubst %6,,$1),$(if $(patsubst %5,,$1),$(if $(patsubst %4,,$1),$(if $(patsubst %3,,$1),$(if $(patsubst %2,,$1),$(if $(patsubst %1,,$1),$(patsubst %0,%1,$1),$(patsubst %1,%2,$1)),$(patsubst %2,%3,$1)),$(patsubst %3,%4,$1)),$(patsubst %4,%5,$1)),$(patsubst %5,%6,$1)),$(patsubst %6,%7,$1)),$(patsubst %7,%8,$1)),$(patsubst %8,%9,$1)),$(call dec-cnt,$(patsubst %9,%,$1))0),1)
+## - `$(call decimal-inc,0099)` -> `0100`
+decimal-inc = $(if $1,$(if $(patsubst %9,,$1),$(if $(patsubst %8,,$1),$(if $(patsubst %7,,$1),$(if $(patsubst %6,,$1),$(if $(patsubst %5,,$1),$(if $(patsubst %4,,$1),$(if $(patsubst %3,,$1),$(if $(patsubst %2,,$1),$(if $(patsubst %1,,$1),$(patsubst %0,%1,$1),$(patsubst %1,%2,$1)),$(patsubst %2,%3,$1)),$(patsubst %3,%4,$1)),$(patsubst %4,%5,$1)),$(patsubst %5,%6,$1)),$(patsubst %6,%7,$1)),$(patsubst %7,%8,$1)),$(patsubst %8,%9,$1)),$(call dec-cnt,$(patsubst %9,%,$1))0),1)
 
 #----------------------------------------------------------------------
 ###### $(call symgen)
 ## Generate a different string at each call. The last generated symbol is
 ## accessible via `$(last-symgen)`.
 ## - `$(call symgen)` --> `sym0`
-symgen = $(eval last-symgen:=sym$(call bincnt,$(subst sym,,$(last-symgen))))$(last-symgen)
+symgen = $(eval last-symgen:=sym$(call binary-inc,$(subst sym,,$(last-symgen))))$(last-symgen)
 
 #----------------------------------------------------------------------
 ###### $(call interval,_start_,_range_[,_step_])
@@ -394,7 +394,7 @@ chop-str-spc = $(call chop-str,$(call spc-mask,$1),$2$(-spacereplace),$3,$4,$5)
 ## The _binary-literal_ must be present and can be any combination of `0`'s and `1`'s.
 ## - `$(call uniq-sufx,The quick brown fox,0)` --> `The¤0 quick¤1 brown¤10 fox¤11`
 ## - `$(call uniq-sufx,The quick brown fox,111)` --> `The¤111 quick¤1000 brown¤1001 fox¤1010`
-uniq-sufx = $(if $1,$(firstword $1)$(-separator)$2 $(call uniq-sufx,$(wordlist 2,2147483647,$1),$(call bincnt,$2)))
+uniq-sufx = $(if $1,$(firstword $1)$(-separator)$2 $(call uniq-sufx,$(wordlist 2,2147483647,$1),$(call binary-inc,$2)))
 
 #----------------------------------------------------------------------
 ###### $(call sort-all,_list_)
@@ -418,17 +418,33 @@ rev-list = $(strip $(call -rev-list,$1,1073741824 1073741825 536870912 536870913
 ## - `$(call list2param,The   quick brown   fox)` --> `The,quick,brown,fox`
 list2param = $(subst $(space),$(comma),$(strip $1))
 
-###### $(call clear-pfx-list,_prefixed-list_)
+###### $(call drop-prefix,_prefix-list_)
 ## Clear the prefixes from a prefix list. A prefix list
 ## is a make list with a prefix name prepended to each list
 ## element and the internal character `$(-separator)` between them
 ## e.g. `alpha¤Linux  num¤4  dot¤.  num¤2`. 
-clear-pfx-list = $(filter-out %$(-separator),$(subst $(-separator),$(-separator) ,$1))
+drop-prefix = $(filter-out %$(-separator),$(subst $(-separator),$(-separator) ,$1))
 
-# $1 - typed value list ("type val" tuples)
-# $2 - type name
-# $3 - optional index
-get-type-val = $(-gmtt-dbg-args)$(word $(call deccnt,$3),$(call clear-pfx-list,$(filter $2$(-separator)%,$1)))
+###### $(call drop-suffix,_prefix-list_)
+## Clear the suffixes (usually the data) from a prefix list.
+## What remains is a list of prefixes only . A prefix list
+## is a make list with a prefix name prepended to each list
+## element and the internal character `$(-separator)` between them
+## e.g. `alpha¤Linux  num¤4  dot¤.  num¤2`. 
+drop-suffix = $(filter-out $(-separator)%,$(subst $(-separator), $(-separator),$1))
+
+
+###### $(call get-prfx-val,_prefix-list_,_prefix-1_ [_prefix-2_.._prefix-n_][,_mth_[,_nth_]])
+## Retrieve the value with the given prefixes from the prefix list.
+## Optionally select not the first but the _mth_ occurrence of this
+## prefix value or a range from the _mth_ to the _nth_ occurrence.
+get-prfx-val = $(-gmtt-dbg-args)$(wordlist $(call decimal-inc,$3),$(call decimal-inc,$(or $4,$3)),$(call drop-prefix,$(filter $(addsuffix $(-separator)%,$2),$1)))
+
+###### $(call get-prfx-range,_prefix-list_,_first-prefix_,_last-prefix_[,_nth_])
+## 
+get-prfx-range = $(-gmtt-dbg-args)$(if $(filter $2$(-separator)%,$(firstword $1)),$(call -get-prfx-range,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$(firstword $1)),$(if $1,$(call get-prfx-range,$(wordlist 2,2147483647,$1),$2,$3,$4,$5)))
+-get-prfx-range = $(-gmtt-dbg-args)$(if $(filter $3$(-separator)%,$(firstword $1)),$(if $(call str-eq,$4,$5),$6,$(call get-prfx-range,$(wordlist 2,2147483647,$1),$2,$3,$(call decimal-inc,$4),$5)),$(if $1,$(call -get-prfx-range,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$6 $(firstword $1))))
+
 
 #----------------------------------------------------------------------
 ###### $(call exec,_quoted-func_,_params_)
@@ -1147,7 +1163,7 @@ fill-up = $(call bit-or,$1,$(call sub,$2,1))
 # Character 164('¤') is used as separator and is forbidden in key columns.
 # $1 - list of keys before sorting
 # $2 - table width
--sort-ix = $(foreach i,$(call clear-pfx-list,$(sort $(join $1,$(call -bld-ix,$1,$(-separator))))),$(call -uadd10,1,$(call -umul10,$(i),$2)))
+-sort-ix = $(foreach i,$(call drop-prefix,$(sort $(join $1,$(call -bld-ix,$1,$(-separator))))),$(call -uadd10,1,$(call -umul10,$(i),$2)))
 
 #----------------------------------------------------------------------
 # Generate a list of reversely sorted indexes from the given unsorted keys.

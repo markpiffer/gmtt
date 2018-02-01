@@ -108,7 +108,7 @@ explode = $(if $1,$(subst $(firstword $1),$(firstword $1) ,$(call explode,$(word
 ## Remove all spaces from the given string. Note that make is mostly unaware of escape
 ## characters and therefore takes all spaces verbatim.
 ## - `$(call implode,some\ awkward\ Windows\ path)` --> `some\awkward\Windows\path`
-implode = $(subst $(space),$2,$(strip $1))
+implode = $(subst $(space),,$(strip $1))
 
 -upper- := $(call implode,$([upper]))
 -lower- := $(call implode,$([lower]))
@@ -327,6 +327,7 @@ $(foreach c,$(-match-chars-q),$(eval -glob-match-$(c) = $$(if $$1,$$(if $$(finds
 #----------------------------------------------------------------------
 ###### $(call glob-match,_string_,_pattern_)
 ## Try to match the _string_ with the _pattern_, applying glob-syntax.
+## Return `t` if a match is valid, ` ` (empty string) if no match occurred.
 ## Glob-syntax is well known from the shell and
 ## https://en.wikipedia.org/wiki/Glob_(programming)
 ## All characters match themselves except:
@@ -347,32 +348,36 @@ glob-match = $(call -glob-match,$(call explode,$(-match-chars),$(subst $(space),
 
 
 ###### `$(call chop-str,_string_,_group-string_[,_group-string_[,_group-string_[,_group-string_]]])`
-## Dissect given _string_ into chunks of characters of the same
-## group. Each character in the string is tested for membership in the
-## group-strings and stays glued to its neighbours if they are in the same
-## group. If the groups are different a space is inserted. This function
-## mainly serves to cut formated alphanumeric strings apart.
-## In the output string each chunk is prepended with the identifier (first
-## member) of its corresponding group string therefore groups must be
-## given as a `_identifier characters_` tuple.  The _identifier_ is given back as
-## indicator before each of the separated chunks (see examples). If
-## a character from the string is not found in any of the group strings,
-## it is dropped but still separates chunks.
-## *How to handle strings with spaces*: if you don't need the spaces
-## after parsing (spaces only separate the string parts) then you don't
-## have to do anything, simply call the function with the string as parameter.
-## If you want to preserve spaces, then you must call `chop-str-spc` which
-## will leave behind the same list of string parts _but with spaces still
-## replaced by an internal character_. The space character is handled as if
-## it is part of the first _group-string_ so all sequences of characters
-## from the first group which are separated by space will become one chunk.
-## This way you can still handle the function result as a list after calling.
-## When stepping through this list you can remove the internal character by simply 
-## applying `$(call spc-unmask,_string-chunk-from-result_)`.
+## Dissect given _string_ into chunks of characters belonging to the
+## same _group-string_ and return the result as a separator list. A
+## _group-string_ is a tuple of an _identifier_ string and a
+## _group-characters_ string with a space in between (e.g.`digit
+## 0123456789`). Each character in the given _string_ is tested for
+## membership in one of the _group-characters_. If adjacent characters
+## belong to the same _group-string_ they stay glued together
+## otherwise a space is inserted.  The _identifier_ is attached as a
+## prefix to the character chunks so that subsequent functions can
+## distinguish the groups in the result. If a character in _string_ is
+## not found in any of the group strings, it is dropped but still
+## separates chunks. This function mainly serves to cut formated
+## alphanumeric strings apart.
+## *How to handle strings with spaces*:
+## if you don't need the spaces after parsing (spaces only separate
+## the string parts) then you don't have to do anything, simply call
+## the function with the string as parameter.  If you want to preserve
+## spaces, then you must call `chop-str-spc` which will leave behind
+## the same list of string parts _but with spaces still replaced by an
+## internal character_. The space character is handled as if it is
+## part of the first _group-string_ so all sequences of characters
+## from the first group which are separated by space will become one
+## chunk.  This way you can still handle the function result as a list
+## after calling.  When stepping through this list you can remove the
+## internal character by simply applying `$(call
+## spc-unmask,_string-chunk-from-result_)`.
 ## Examples:
-## - `$(call chop-str,Linux 4.13.0-17-generic,A $(-alpha-),1 $(-digit-),. .-+?)` --> ` A Linux 1 4 . . 1 13 . . 1 0 . - 1 17 . - A generic`
-## - `$(call chop-str,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-),num $(-digit-),sep :)` --> ` alpha Thu alpha Nov num 30 num 18 sep : num 43 sep : num 22 alpha CET num 2017`
-## - `$(call chop-str-spc,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-),num $(-digit-),sep :)` --> ` alpha Thu§Nov§ num 30 alpha § num 18 sep : num 43 sep : num 22 alpha §CET§ num 2017`
+## - `$(call chop-str,Linux 4.13.0-17-generic,A $(-alpha-),1 $(-digit-),. .-+?)` --> ` A¤Linux 1¤4 .¤. 1¤13 .¤. 1¤0 .¤- 1¤17 .¤- A¤generic`
+## - `$(call chop-str,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-),num $(-digit-),sep :)` --> ` alpha¤Thu alpha¤Nov num¤30 num¤18 sep¤: num¤43 sep¤: num¤22 alpha¤CET num¤2017`
+## - `$(call chop-str-spc,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-),num $(-digit-),sep :)` --> ` alpha¤Thu§Nov§ num¤30 alpha¤§ num¤18 sep¤: num¤43 sep¤: num¤22 alpha¤§CET§ num¤2017`
 chop-str = $(call -chop-str,$(call explode,$(all-chars) $(-spacereplace) $(-separator) $(-never-matching),$(subst $(space),$(-never-matching),$1)),,$2,$3,$4,$5)
 chop-str-spc = $(call chop-str,$(call spc-mask,$1),$2$(-spacereplace),$3,$4,$5)
 
@@ -387,6 +392,43 @@ chop-str-spc = $(call chop-str,$(call spc-mask,$1),$2$(-spacereplace),$3,$4,$5)
 -chop-str-4 = $(-gmtt-dbg-args)$(if $(findstring $(firstword $1),$(lastword $4)),$(call -chop-str-4,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -chop-str,$1,$2,$3,$4,$5,$6))
 -chop-str-5 = $(-gmtt-dbg-args)$(if $(findstring $(firstword $1),$(lastword $5)),$(call -chop-str-5,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -chop-str,$1,$2,$3,$4,$5,$6))
 -chop-str-6 = $(-gmtt-dbg-args)$(if $(findstring $(firstword $1),$(lastword $6)),$(call -chop-str-6,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -chop-str,$1,$2,$3,$4,$5,$6))
+
+
+###### $(call drop-prfx,_separator-list_)
+## Clear the prefixes from a separator list. A separator list
+## is a make list with a prefix name prepended to each list
+## element and the internal character `$(-separator)` between them
+## e.g. `alpha¤Linux  num¤4  dot¤.  num¤2`. 
+drop-prfx = $(filter-out %$(-separator),$(subst $(-separator),$(-separator) ,$1))
+
+###### $(call drop-sufx,_separator-list_)
+## Clear the suffixes (usually the data) from a separator list.
+## What remains is a list of prefixes only . A separator list
+## is a make list with a prefix name prepended to each list
+## element and the internal character `$(-separator)` between them
+## e.g. `alpha¤Linux  num¤4  dot¤.  num¤2`. 
+drop-sufx = $(filter-out $(-separator)%,$(subst $(-separator), $(-separator),$1))
+
+###### $(call filter-prfx,_separator-list_,_prefix-1_ [_prefix-2_.._prefix-n_])
+filter-prfx = $(filter $(addsuffix $(-separator)%,$2),$1)
+filter-out-prfx = $(filter-out $(addsuffix $(-separator)%,$2),$1)
+filter-sufx = $(filter $(addprefix %$(-separator),$2),$1)
+filter-out-sufx = $(filter-out $(addprefix %$(-separator),$2),$1)
+
+###### $(call get-prfx-val,_separator-list_,_prefix-1_ [_prefix-2_.._prefix-n_][,_mth_[,_nth_]])
+## Retrieve the value with the given prefixes from the separator list.
+## Optionally select not the first but the _mth_ occurrence of this
+## prefix value or a range from the _mth_ to the _nth_ occurrence.
+get-prfx-val = $(-gmtt-dbg-args)$(wordlist $(call decimal-inc,$3),$(call decimal-inc,$(or $4,$3)),$(call drop-prfx,$(filter $(addprefix %$(-separator),$2),$1)))
+get-sufx-val = $(-gmtt-dbg-args)$(wordlist $(call decimal-inc,$3),$(call decimal-inc,$(or $4,$3)),$(call drop-prfx,$(filter $(addsuffix $(-separator)%,$2),$1)))
+
+###### $(call get-prfx-range,_separator-list_,_first-prefix_,_last-prefix_[,_nth_])
+## 
+get-prfx-range = $(-gmtt-dbg-args)$(if $(filter %$(-separator)$2,$(firstword $1)),$(call -get-prfx-range,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$(firstword $1)),$(if $1,$(call get-prfx-range,$(wordlist 2,2147483647,$1),$2,$3,$(or $4,0),$(or $5,0))))
+-get-prfx-range = $(-gmtt-dbg-args)$(if $1,$(if $(filter %$(-separator)$3,$(firstword $1)),$(if $(call str-eq,$4,$5),$6 $(firstword $1),$(call get-prfx-range,$1,$2,$3,$4,$(call decimal-inc,$5))),$(call -get-prfx-range,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$6 $(firstword $1))),$6)
+
+get-sufx-range = $(-gmtt-dbg-args)$(if $(filter $2$(-separator)%,$(firstword $1)),$(call -get-sufx-range,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$(firstword $1)),$(if $1,$(call get-sufx-range,$(wordlist 2,2147483647,$1),$2,$3,$(or $4,0),$(or $5,0))))
+-get-sufx-range = $(-gmtt-dbg-args)$(if $1,$(if $(filter $3$(-separator)%,$(firstword $1)),$(if $(call str-eq,$4,$5),$6 $(firstword $1),$(call get-sufx-range,$1,$2,$3,$4,$(call decimal-inc,$5))),$(call -get-sufx-range,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$6 $(firstword $1))),$6)
 
 #----------------------------------------------------------------------
 ###### $(call uniq-sufx,_list_,_binary-literal_)
@@ -410,6 +452,13 @@ sort-all = $(foreach i,$(sort $(call uniq-sufx,$1,0)),$(firstword $(subst $(-sep
 rev-list = $(strip $(call -rev-list,$1,1073741824 1073741825 536870912 536870913 268435456 268435457 134217728 134217729 67108864 67108865 33554432 33554433 16777216 16777217 8388608 8388609 4194304 4194305 2097152 2097153 1048576 1048577 524288 524289 262144 262145 131072 131073 65536 65537 32768 32769 16384 16385 8192 8193 4096 4097 2048 2049 1024 1025 512 513 256 257 128 129 64 65 32 33 16 17))
 -rev-list = $(if $1,$(if $2,$(call -rev-list,$(wordlist $(word 2,$2),21819281782,$1),$(wordlist 3,64,$2)) $(call -rev-list,$(wordlist 1,$(firstword $2),$1),$(wordlist 3,64,$2)),$(word 16,$1) $(word 15,$1) $(word 14,$1) $(word 13,$1) $(word 12,$1) $(word 11,$1) $(word 10,$1) $(word 9,$1) $(word 8,$1) $(word 7,$1) $(word 6,$1) $(word 5,$1) $(word 4,$1) $(word 3,$1) $(word 2,$1) $(firstword $1)))
 
+
+###### $(call shorten,_list_,[[_n_],_m_])
+## Delete _n_ elements from the front and _m_ elements from the tail
+## of _list_. Both _n_ and _m_ are optional parameters and default to 0.
+## Counting starts from 0, that is `$(call shorten,1 2 3,1,1)` evaluates to `2`. 
+shorten = $(call rev-list,$(wordlist $(call decimal-inc,$(or $3,0)),2147483647,$(call rev-list,$(wordlist $(call decimal-inc,$(or $2,0)),2147483647,$1))))
+
 #----------------------------------------------------------------------
 ###### $(call list2param,_list_)
 ## Convert the given _list_ to a string where each list element is
@@ -417,34 +466,6 @@ rev-list = $(strip $(call -rev-list,$1,1073741824 1073741825 536870912 536870913
 ## there is no comma at the start and end of the list.
 ## - `$(call list2param,The   quick brown   fox)` --> `The,quick,brown,fox`
 list2param = $(subst $(space),$(comma),$(strip $1))
-
-###### $(call drop-prefix,_prefix-list_)
-## Clear the prefixes from a prefix list. A prefix list
-## is a make list with a prefix name prepended to each list
-## element and the internal character `$(-separator)` between them
-## e.g. `alpha¤Linux  num¤4  dot¤.  num¤2`. 
-drop-prefix = $(filter-out %$(-separator),$(subst $(-separator),$(-separator) ,$1))
-
-###### $(call drop-suffix,_prefix-list_)
-## Clear the suffixes (usually the data) from a prefix list.
-## What remains is a list of prefixes only . A prefix list
-## is a make list with a prefix name prepended to each list
-## element and the internal character `$(-separator)` between them
-## e.g. `alpha¤Linux  num¤4  dot¤.  num¤2`. 
-drop-suffix = $(filter-out $(-separator)%,$(subst $(-separator), $(-separator),$1))
-
-
-###### $(call get-prfx-val,_prefix-list_,_prefix-1_ [_prefix-2_.._prefix-n_][,_mth_[,_nth_]])
-## Retrieve the value with the given prefixes from the prefix list.
-## Optionally select not the first but the _mth_ occurrence of this
-## prefix value or a range from the _mth_ to the _nth_ occurrence.
-get-prfx-val = $(-gmtt-dbg-args)$(wordlist $(call decimal-inc,$3),$(call decimal-inc,$(or $4,$3)),$(call drop-prefix,$(filter $(addsuffix $(-separator)%,$2),$1)))
-
-###### $(call get-prfx-range,_prefix-list_,_first-prefix_,_last-prefix_[,_nth_])
-## 
-get-prfx-range = $(-gmtt-dbg-args)$(if $(filter $2$(-separator)%,$(firstword $1)),$(call -get-prfx-range,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$(firstword $1)),$(if $1,$(call get-prfx-range,$(wordlist 2,2147483647,$1),$2,$3,$4,$5)))
--get-prfx-range = $(-gmtt-dbg-args)$(if $(filter $3$(-separator)%,$(firstword $1)),$(if $(call str-eq,$4,$5),$6,$(call get-prfx-range,$(wordlist 2,2147483647,$1),$2,$3,$(call decimal-inc,$4),$5)),$(if $1,$(call -get-prfx-range,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$6 $(firstword $1))))
-
 
 #----------------------------------------------------------------------
 ###### $(call exec,_quoted-func_,_params_)
@@ -1163,7 +1184,7 @@ fill-up = $(call bit-or,$1,$(call sub,$2,1))
 # Character 164('¤') is used as separator and is forbidden in key columns.
 # $1 - list of keys before sorting
 # $2 - table width
--sort-ix = $(foreach i,$(call drop-prefix,$(sort $(join $1,$(call -bld-ix,$1,$(-separator))))),$(call -uadd10,1,$(call -umul10,$(i),$2)))
+-sort-ix = $(foreach i,$(call drop-prfx,$(sort $(join $1,$(call -bld-ix,$1,$(-separator))))),$(call -uadd10,1,$(call -umul10,$(i),$2)))
 
 #----------------------------------------------------------------------
 # Generate a list of reversely sorted indexes from the given unsorted keys.

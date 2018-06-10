@@ -1280,10 +1280,24 @@ map-select = $(call -map-select,$1,$(strip $2),$3,$4)
 -map-select = $(call --map-select,$(wordlist 2,2147483647,$2),$(firstword $2),$(call add,$(firstword $2),1),$1,$3,$4)
 --map-select = $(if $1,$(if $(call exec,$5,$(call list2param,$(wordlist 1,$2,$1))), $(call exec,$6,$(call list2param,$(call pick,$4,$1))))$(call --map-select,$(wordlist $3,2147483647,$1),$2,$3,$4,$5,$6))
 
-# $(call tbl-join,_table1_,table2_)
-tbl-join = $(call -tbl-join,$(word 1,$1),$(word 1,$2),$(wordlist 2,2147483647,$1),$(wordlist 2,2147483647,$2),$(call sub,$(words $1),$(words $2)))
--tbl-join = $(if $(findstring -,$5),$(call --tbl-join,$1,$2,$3 $(call n-list,$3,$(subst -,,$5)),$4),$(if $(subst 0,,$5),$(call --tbl-join,$1,$2,$3,$4 $(call n-list,$4,$5)),$(call --tbl-join,$1,$2,$3,$4)))
---tbl-join = $(call add,$1,$2) $(subst $(-separator), ,$(join $(patsubst %,%$(-separator),$(call -chop-rec,$3,$1)),$(call -chop-rec,$4,$2)))
+
+#----------------------------------------------------------------------
+###### $(call join-tbl,_table1_,table2_[,_NIL-value_])
+## Join two tables side by side. The resulting table has as many columns
+## as both input tables combined. The optional NIL value will be 
+## used to fill empty places in the resulting table if one input table has
+## less rows than the other. If the NIL value is *not* given, the shorter
+## of the two tables will be repeated as many times as necessary to fill up
+## the number of rows to that of the longer table.
+## The order of the tables is preserved.
+##
+## Examples:
+## - `$(call join-tbl,1 one two,2 first 1st second 2nd third 3rd)` --> `3 one first 1st two second 2nd one third 3rd`
+## - `$(call join-tbl,2 one apple two oranges,1 1st 2nd 3rd,NIL)` --> `3 one apple 1st two oranges 2nd NIL NIL 3rd`
+join-tbl = $(call add,$(word 1,$1),$(word 1,$2)) $(call -join-tbl,$(call -chop-rec,$(wordlist 2,2147483647,$1),$(word 1,$1)),$(call -chop-rec,$(wordlist 2,2147483647,$2),$(word 1,$2)),$(if $3,$(subst $(space),$(-separator),$(call n-list,$3,$(word 1,$1)))),$(if $3,$(subst $(space),$(-separator),$(call n-list,$3,$(word 1,$2)))))
+-join-tbl = $(call --join-tbl,$1,$2,$(call sub,$(words $1),$(words $2)),$3,$4)
+--join-tbl = $(if $(findstring -,$3),$(call ---join-tbl,$1 $(call n-list,$(or $4,$1),$(subst -,,$3)),$2),$(if $(subst 0,,$3),$(call ---join-tbl,$1,$2 $(call n-list,$(or $5,$2),$3)),$(call ---join-tbl,$1,$2)))
+---join-tbl = $(subst $(-separator), ,$(join $(patsubst %,%$(-separator),$1),$2))
 
 
 

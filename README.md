@@ -351,7 +351,7 @@ are not.
  - `ends-in-oo = $(call str-match,$1,%oo)`
  - `$(call select,3 1 2 3,$(test-tbl),$$(call ends-in-oo,$$1))` --> `baz foo bar baz baf foo bar baf`
  
-#### $(call join-tbl,_table1_,table2_[,_NIL-value_])
+#### $(call join-tbl,_table1_,_table2_[,_NIL-value_])
 Join two tables side by side. The resulting table has as many columns
 as both input tables combined. The optional NIL value will be 
 used to fill empty places in the resulting table if one input table has

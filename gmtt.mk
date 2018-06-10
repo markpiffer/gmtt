@@ -1280,6 +1280,12 @@ map-select = $(call -map-select,$1,$(strip $2),$3,$4)
 -map-select = $(call --map-select,$(wordlist 2,2147483647,$2),$(firstword $2),$(call add,$(firstword $2),1),$1,$3,$4)
 --map-select = $(if $1,$(if $(call exec,$5,$(call list2param,$(wordlist 1,$2,$1))), $(call exec,$6,$(call list2param,$(call pick,$4,$1))))$(call --map-select,$(wordlist $3,2147483647,$1),$2,$3,$4,$5,$6))
 
+# $(call tbl-join,_table1_,table2_)
+tbl-join = $(call -tbl-join,$(word 1,$1),$(word 1,$2),$(wordlist 2,2147483647,$1),$(wordlist 2,2147483647,$2),$(call sub,$(words $1),$(words $2)))
+-tbl-join = $(if $(findstring -,$5),$(call --tbl-join,$1,$2,$3 $(call n-list,$3,$(subst -,,$5)),$4),$(if $(subst 0,,$5),$(call --tbl-join,$1,$2,$3,$4 $(call n-list,$4,$5)),$(call --tbl-join,$1,$2,$3,$4)))
+--tbl-join = $(call add,$1,$2) $(subst $(-separator), ,$(join $(patsubst %,%$(-separator),$(call -chop-rec,$3,$1)),$(call -chop-rec,$4,$2)))
+
+
 
 #----------------------------------------------------------------------
 #$(call -gmtt-test,$$(call f,x),y)

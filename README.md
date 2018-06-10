@@ -364,5 +364,5 @@ The order of the tables is preserved.
 
 Examples:
 - `$(call join-tbl,1 one two,2 first 1st second 2nd third 3rd)` --> `3 one first 1st two second 2nd one third 3rd`
-- `$(call join-tbl,2 one apple two oranges,1 1st 2nd 3rd,NIL)` --> `3 one apple 1st two oranges 2nd NIL NIL 3rd`
+- `$(call join-tbl,2 one apple two oranges,1 1st 2nd 3rd,/*NIL*/)` --> `3 one apple 1st two oranges 2nd /*NIL*/ /*NIL*/ 3rd`
 

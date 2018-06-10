@@ -350,3 +350,17 @@ are not.
  The same can be achieved, if we use a function as where clause:
  - `ends-in-oo = $(call str-match,$1,%oo)`
  - `$(call select,3 1 2 3,$(test-tbl),$$(call ends-in-oo,$$1))` --> `baz foo bar baz baf foo bar baf`
+ 
+#### $(call join-tbl,_table1_,table2_[,_NIL-value_])
+Join two tables side by side. The resulting table has as many columns
+as both input tables combined. The optional NIL value will be 
+used to fill empty places in the resulting table if one input table has
+less rows than the other. If the NIL value is *not* given, the shorter
+of the two tables will be repeated as many times as necessary to fill up
+the number of rows to that of the longer table.
+The order of the tables is preserved.
+
+Examples:
+- `$(call join-tbl,1 one two,2 first 1st second 2nd third 3rd)` --> `3 one first 1st two second 2nd one third 3rd`
+- `$(call join-tbl,2 one apple two oranges,1 1st 2nd 3rd,NIL)` --> `3 one apple 1st two oranges 2nd NIL NIL 3rd`
+

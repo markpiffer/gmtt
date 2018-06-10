@@ -309,6 +309,8 @@ are not.
  Examples:
  - `$(call div,9876543210,0x13)` --> `519818063`
  - `$(call div,0x9876543210,16)` --> `0x987654321`
+ 
+### Table functions
 
 #### $(call sort-tbl,_table_,_key-gen_)
  Sort a _table_ by lines. Key comparison is done by lexical ordering.

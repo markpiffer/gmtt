@@ -290,44 +290,43 @@ str-ge = $(if $(filter _$(subst $(space),_,$(strip $2)),$(firstword $(sort _$(su
 ## - `$(call str-match,,%))` --> `t`
 str-match = $(if $(and $(patsubst _$(subst $(space),$(-separator),$(strip $1)),,_$(subst $(space),$(-separator),$(strip $2))),$(patsubst _$(subst $(space),$(-separator),$(strip $2)),,_$(subst $(space),$(-separator),$(strip $1)))),,t)
 
-
 #----------------------------------------------------------------------
-# $(call -glob-match-X,_string_,_pattern_)
+# $(call -glob-match-X,_string_,_pattern_,_match-result_)
 # Match the character X against the first character of _string_. If
 # they match, recursively call -glob-match-Y, with Y being the next
-# character from _pattern_. On match failure, return false (empty string).
+# character from _pattern_ and glue the character to _match-result_.
+# On match failure, return false (empty string).
 # The particular functions are generated out of the list of characters.
-$(foreach c,$(-match-chars-q),$(eval -glob-match-$(c) = $$(if $$1,$$(if $$(findstring $$(firstword $$1),$(c)),$$(call -glob-match-$$(firstword $$2),$$(wordlist 2,2147483647,$$1),$$(wordlist 2,2147483647,$$2))))))
+$(foreach c,$(-match-chars-q),$(eval -glob-match-$(c) = $$(if $$1,$$(if $$(findstring $$(firstword $$1),$(c)),$$(call -glob-match-$$(firstword $$2),$$(wordlist 2,2147483647,$$1),$$(wordlist 2,2147483647,$$2),$$(3)$(c))))))
 # Rewrite the matching functions for special characters in a glob pattern
 # End of pattern:
--glob-match- = $(if $1,,t)
+-glob-match- = $(if $1,,$3)
 # Asterisk - First try if the * matches the empty string and recurse
 # with the next character from the _pattern_. If that fails, consume
 # one character from _string_ and try again.
--glob-match-* = $(if $1,$(if $(call -glob-match-$(firstword $2),$1,$(wordlist 2,2147483647,$2)),t,$(call -glob-match-*,$(wordlist 2,2147483647,$1),$2)),$(if $2,,t))
+-glob-match-* = $(if $1,$(or $(call -glob-match-$(firstword $2),$1,$(wordlist 2,2147483647,$2),$3 ),$(call --glob-match-*,$(wordlist 2,2147483647,$1),$2,$3 $(word 1,$1))),$(if $2,,$3))
+--glob-match-* = $(if $1,$(or $(call -glob-match-$(firstword $2),$1,$(wordlist 2,2147483647,$2),$3 ),$(call --glob-match-*,$(wordlist 2,2147483647,$1),$2,$3$(word 1,$1))),$(if $2,,$3))
 # Question mark - consume one character from _string_. Fails only if
 # _string_ is already empty.
--glob-match-? = $(if $1,$(call -glob-match-$(firstword $2),$(wordlist 2,2147483647,$1),$(wordlist 2,2147483647,$2)))
+-glob-match-? = $(if $1,$(call -glob-match-$(firstword $2),$(wordlist 2,2147483647,$1),$(wordlist 2,2147483647,$2),$3 $(word 1,$1) ))
 # Opening brackets - start a [] sequence for character (range) selection and match it
--glob-match-[ = $(if $1,$(if $(findstring !,$(firstword $2)),$(call -neg-bracket-enter,$1,$(wordlist 2,2147483647,$2)),$(call -bracket-enter,$1,$2)))
-# $(call bracket-...,_string_,_pattern_,_bracket-chars-so-far_)
+-glob-match-[ = $(if $1,$(if $(findstring !,$(firstword $2)),$(call -neg-bracket-enter,$1,$(wordlist 2,2147483647,$2),$3),$(call -bracket-enter,$1,$2,$3)))
+# $(call bracket-...,_string_,_pattern_,_bracket-chars-so-far_,_match-result_)
 # The bracket- and neg-bracket- functions step through a bracket
 # expression an accumulate the characters and character ranges
 # in _bracket-chars-so-far_ until the closing ']' is encountered.
--bracket-enter = $(call -bracket-cont,$1,$(wordlist 2,2147483647,$2),$(firstword $2))
--neg-bracket-enter = $(call -neg-bracket-cont,$1,$(wordlist 2,2147483647,$2),$(firstword $2))
--bracket-cont = $(if $(findstring ],$(firstword $2)),$(call -bracket-match,$1,$(wordlist 2,2147483647,$2),$3),$(if $(findstring -,$(firstword $2)),$(if $(findstring ],$(word 2,$2)),$(call -bracket-match,$1,$(wordlist 3,2147483647,$2),$3 -),$(call -bracket-cont,$1,$(wordlist 3,2147483647,$2),$3 $(call -match-char-range,$(lastword $3),$(word 2,$2)))),$(call -bracket-cont,$1,$(wordlist 2,2147483647,$2),$3 $(firstword $2))))
--neg-bracket-cont = $(if $(findstring ],$(firstword $2)),$(call -neg-bracket-match,$1,$(wordlist 2,2147483647,$2),$3),$(if $(findstring -,$(firstword $2)),$(if $(findstring ],$(word 2,$2)),$(call -neg-bracket-match,$1,$(wordlist 3,2147483647,$2),$3 -),$(call -neg-bracket-cont,$1,$(wordlist 3,2147483647,$2),$3 $(call -match-char-range,$(lastword $3),$(word 2,$2)))),$(call -neg-bracket-cont,$1,$(wordlist 2,2147483647,$2),$3 $(firstword $2))))
+-bracket-enter = $(call -bracket-cont,$1,$(wordlist 2,2147483647,$2),$(firstword $2),$3)
+-neg-bracket-enter = $(call -neg-bracket-cont,$1,$(wordlist 2,2147483647,$2),$(firstword $2),$3)
+-bracket-cont = $(if $(findstring ],$(firstword $2)),$(call -bracket-match,$1,$(wordlist 2,2147483647,$2),$3,$4),$(if $(findstring -,$(firstword $2)),$(if $(findstring ],$(word 2,$2)),$(call -bracket-match,$1,$(wordlist 3,2147483647,$2),$3 -,$4),$(call -bracket-cont,$1,$(wordlist 3,2147483647,$2),$3 $(call -match-char-range,$(lastword $3),$(word 2,$2)),$4)),$(call -bracket-cont,$1,$(wordlist 2,2147483647,$2),$3 $(firstword $2),$4)))
+-neg-bracket-cont = $(if $(findstring ],$(firstword $2)),$(call -neg-bracket-match,$1,$(wordlist 2,2147483647,$2),$3,$4),$(if $(findstring -,$(firstword $2)),$(if $(findstring ],$(word 2,$2)),$(call -neg-bracket-match,$1,$(wordlist 3,2147483647,$2),$3 -,$4),$(call -neg-bracket-cont,$1,$(wordlist 3,2147483647,$2),$3 $(call -match-char-range,$(lastword $3),$(word 2,$2)),$4)),$(call -neg-bracket-cont,$1,$(wordlist 2,2147483647,$2),$3 $(firstword $2),$4)))
 # bracket-match finally tries to match the first character in
 # _string_ against the accumulated _bracket-chars-so-far_ and
 # if succeeding, continues recursively with -glob-match-Y 
--neg-bracket-match = $(if $(findstring $(firstword $1),$3),,$(call -glob-match-$(firstword $2),$(wordlist 2,2147483647,$1),$(wordlist 2,2147483647,$2)))
--bracket-match = $(if $(findstring $(firstword $1),$3),$(call -glob-match-$(firstword $2),$(wordlist 2,2147483647,$1),$(wordlist 2,2147483647,$2)))
-
+-neg-bracket-match = $(if $(findstring $(firstword $1),$3),,$(call -glob-match-$(firstword $2),$(wordlist 2,2147483647,$1),$(wordlist 2,2147483647,$2),$4 $(firstword $1) ))
+-bracket-match = $(if $(findstring $(firstword $1),$3),$(call -glob-match-$(firstword $2),$(wordlist 2,2147483647,$1),$(wordlist 2,2147483647,$2),$4 $(firstword $1) ))
 #----------------------------------------------------------------------
 ###### $(call glob-match,_string_,_pattern_)
 ## Try to match the _string_ with the _pattern_, applying glob-syntax.
-## Return `t` if a match is valid, ` ` (empty string) if no match occurred.
 ## Glob-syntax is well known from the shell and
 ## https://en.wikipedia.org/wiki/Glob_(programming)
 ## All characters match themselves except:
@@ -340,10 +339,20 @@ $(foreach c,$(-match-chars-q),$(eval -glob-match-$(c) = $$(if $$1,$$(if $$(finds
 ##    - `[]abc]` - first position is the only way to match a `]`
 ##    - `[-abc]` - first or last position is the only way to match a `-`
 ##    - `[!a-z]` - `!` inverts the match, i.e. everything but `a`..`z`
+## If no match occurred, the  ` ` (empty string) is returned.
+## If the string matches, it is returned with all parts corresponding to one of the above
+## wildcards separated by space.
+## As GNUmake treats everything which is different from the empty string
+## as true, this function serves the simple matching test as well as a string
+## dissection by wildcard patterns.
+## If you want spaces inside your string to be preserved, use the `glob-match-spc` variant.
+## This will still return a space separated list of the elements of the original string
+## but with all original spaces replaced by an internal character. Use `spc-unmask` to
+## remove these and restore the spaces. 
 ## Examples:
-## - `$(call glob-match,Linux 2.6.32-431.el6.i686,Linux 2.6.*.i686)` --> `t`
-## - `$(call glob-match,down/to/unknown/dir/file.txt,down/*/*/*/*.txt)` --> `t`
-glob-match = $(call -glob-match,$(call explode,$(-match-chars),$(subst $(space),$(spacereplace),$1)),$(call explode,$(-match-chars),$(subst $(space),$(spacereplace),$2)))
+## - `$(call glob-match,Linux 2.6.32-431.el6.i686,Linux 2.6.*.i686)` --> `Linux§2.6. 32-431.el6 .i686`
+## - `$(call glob-match,down/to/unknown/dir/file.txt,down/*/*/*/*.txt)` --> `down/ to / unknown / dir / file .txt`
+glob-match = $(call -glob-match,$(call explode,$(-match-chars),$(subst $(space),$(-spacereplace),$1)),$(call explode,$(-match-chars),$(subst $(space),$(-spacereplace),$2)))
 -glob-match = $(call -glob-match-$(firstword $2),$1,$(wordlist 2,2147483647,$2))
 
 

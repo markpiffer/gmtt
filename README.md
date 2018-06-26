@@ -170,23 +170,36 @@ are not.
  - `$(call str-match,MickeyMouse,MickeyMouse%))` --> `t`
  - `$(call str-match,,%))` --> `t`
 
-#### $(call glob-match,_string_,_pattern_)                                   
- Try to match the _string_ with the _pattern_, applying glob-syntax.         
- Glob-syntax is well known from the shell and                                
- https://en.wikipedia.org/wiki/Glob_(programming)                            
- All characters match themselves except:                                     
- -  `*` - zero or more arbitrary chars                                       
- -  `?` - exactly one arbitrary char                                         
+#### $(call glob-match,_string_,_pattern_)
+ Try to match the _string_ with the _pattern_, applying glob-syntax.
+ Glob-syntax is well known from the shell and
+ https://en.wikipedia.org/wiki/Glob_(programming)
+ All characters match themselves except:
+ -  `*` - zero or more arbitrary chars
+ -  `?` - exactly one arbitrary char
  -  `[]` - exactly one character from the set designated inside the brackets:
-    - `[abc]` - explicit, matches one of `a`, `b` or `c`                     
-    - `[a-z]` - range, matches one of `a`,`b`...`z`. The                     
-                possibly ranges can be taken from `$(all-chars)`             
-    - `[]abc]` - first position is the only way to match a `]`               
-    - `[-abc]` - first or last position is the only way to match a `-`       
-    - `[!a-z]` - `!` inverts the match, i.e. everything but `a`..`z`         
- Examples:                                                                   
- - `$(call glob-match,Linux 2.6.32-431.el6.i686,Linux 2.6.*.i686)` --> `t`   
- - `$(call glob-match,down/to/unknown/dir/file.txt,down/*/*/*/*.txt)` --> `t`
+    - `[abc]` - explicit, matches one of `a`, `b` or `c`
+    - `[a-z]` - range, matches one of `a`,`b`...`z`. The
+                possibly ranges can be taken from `$(all-chars)`
+    - `[]abc]` - first position is the only way to match a `]`
+    - `[-abc]` - first or last position is the only way to match a `-`
+    - `[!a-z]` - `!` inverts the match, i.e. everything but `a`..`z`
+    
+ If no match occurred, the  ` ` (empty string) is returned.
+ If the string matches, it is returned with all parts corresponding to one of the above
+ wildcards separated by space.
+ As GNUmake treats everything which is different from the empty string
+ as true, this function serves the simple matching test as well as a string
+ dissection by wildcard patterns.
+ Spaces inside your string are automatically preserved. The elements of the string
+ are returned but with all original spaces replaced by an internal character to
+ circumvent the rule that GNUmake treats spaces as list element separators.
+ Use `spc-unmask` to remove these and restore the spaces. This caveat is necessary
+ to allow access to the elements with a constant index, in case you are dissecting
+ a string.
+ Examples:
+ - `$(call glob-match,Linux 2.6.32-431.el6.i686,Linux 2.6.*.i686)` --> `Linux§2.6. 32-431.el6 .i686`
+ - `$(call glob-match,down/to/unknown/dir/file.txt,down/*/*/*/*.txt)` --> `down/ to / unknown / dir / file .txt`
  
 ### List functions
 

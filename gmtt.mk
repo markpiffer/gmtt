@@ -345,10 +345,12 @@ $(foreach c,$(-match-chars-q),$(eval -glob-match-$(c) = $$(if $$1,$$(if $$(finds
 ## As GNUmake treats everything which is different from the empty string
 ## as true, this function serves the simple matching test as well as a string
 ## dissection by wildcard patterns.
-## If you want spaces inside your string to be preserved, use the `glob-match-spc` variant.
-## This will still return a space separated list of the elements of the original string
-## but with all original spaces replaced by an internal character. Use `spc-unmask` to
-## remove these and restore the spaces. 
+## Spaces inside your string are automatically preserved. The elements of the string
+## are returned but with all original spaces replaced by an internal character to
+## circumvent the rule that GNUmake treats spaces as list element separators.
+## Use `spc-unmask` to remove these and restore the spaces. This caveat is necessary
+## to allow access to the elements with a constant index, in case you are dissecting
+## a string.
 ## Examples:
 ## - `$(call glob-match,Linux 2.6.32-431.el6.i686,Linux 2.6.*.i686)` --> `Linux§2.6. 32-431.el6 .i686`
 ## - `$(call glob-match,down/to/unknown/dir/file.txt,down/*/*/*/*.txt)` --> `down/ to / unknown / dir / file .txt`

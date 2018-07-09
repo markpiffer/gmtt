@@ -200,7 +200,70 @@ are not.
  Examples:
  - `$(call glob-match,Linux 2.6.32-431.el6.i686,Linux 2.6.*.i686)` --> `Linux§2.6. 32-431.el6 .i686`
  - `$(call glob-match,down/to/unknown/dir/file.txt,down/*/*/*/*.txt)` --> `down/ to / unknown / dir / file .txt`
- 
+
+#### `$(call chop-str,_string_,_group-string_[,_group-string_[,_group-string_[,_group-string_]]])`
+ Dissect given _string_ into chunks of characters belonging to the
+ same _group-string_ and return the result as a separator list. A
+ _group-string_ is a tuple of an _identifier_ string and a
+ _group-characters_ string with a space in between (e.g.`digit
+ 0123456789`). Each character in the given _string_ is tested for
+ membership in one of the _group-characters_. If adjacent characters
+ belong to the same _group-string_ they stay glued together
+ otherwise a space is inserted.  The _identifier_ is attached as a
+ prefix to the character chunks so that subsequent functions can
+ distinguish the groups in the result. If a character in _string_ is
+ not found in any of the group strings, it is dropped but still
+ separates chunks. This function mainly serves to cut formated
+ alphanumeric strings apart.
+ *How to handle strings with spaces*:
+ if you don't need the spaces after parsing (spaces only separate
+ the string parts) then you don't have to do anything, simply call
+ the function with the string as parameter.  If you want to preserve
+ spaces, then you must call `chop-str-spc` which will leave behind
+ the same list of string parts _but with spaces still replaced by an
+ internal character_. The space character is handled as if it is
+ part of the first _group-string_ so all sequences of characters
+ from the first group which are separated by space will become one
+ chunk.  This way you can still handle the function result as a list
+ after calling.  When stepping through this list you can remove the
+ internal character by simply applying `$(call
+ spc-unmask,_string-chunk-from-result_)`.
+ Examples:
+ - `$(call chop-str,Linux 4.13.0-17-generic,A $(-alpha-as-str),1 $(-digit-as-str),. .-+?)` --> ` AÂ¤Linux 1Â¤4 .Â¤. 1Â¤13 .Â¤. 1Â¤0 .Â¤- 1Â¤17 .Â¤- AÂ¤generic`
+ - `$(call chop-str,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-as-str),num $(-digit-as-str),sep :)` --> ` alphaÂ¤Thu alphaÂ¤Nov numÂ¤30 numÂ¤18 sepÂ¤: numÂ¤43 sepÂ¤: numÂ¤22 alphaÂ¤CET numÂ¤2017`
+ - `$(call chop-str-spc,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-as-str),num $(-digit-as-str),sep :)` --> ` alphaÂ¤ThuÂ§NovÂ§ numÂ¤30 alphaÂ¤Â§ numÂ¤18 sepÂ¤: numÂ¤43 sepÂ¤: numÂ¤22 alphaÂ¤Â§CETÂ§ numÂ¤2017`
+
+#### $(call drop-prfx,_separator-list_)
+ Clear the prefixes from a separator list. A separator list
+ is a make list with a prefix name prepended to each list
+ element and the internal character `$(-separator)` between them
+ e.g. `alphaÂ¤Linux  numÂ¤4  dotÂ¤.  numÂ¤2`. 
+
+
+#### $(call drop-sufx,_separator-list_)
+ Clear the suffixes (usually the data) from a separator list.
+ What remains is a list of prefixes only . A separator list
+ is a make list with a prefix name prepended to each list
+ element and the internal character `$(-separator)` between them
+ e.g. `alphaÂ¤Linux  numÂ¤4  dotÂ¤.  numÂ¤2`. 
+
+
+#### $(call get-prfx-val,_separator-list_,_prefix-1_ [_prefix-2_.._prefix-n_][,_m-th_[,_n-th_]])
+ Retrieve the value with the given prefixes from the separator list.
+ Optionally select not the first but the _mth_ occurrence of this
+ prefix value or a range from the _m-th_ to the _n-th_ (inclusive) occurrence.
+
+#### $(call get-prfx-range,_separator-list_,_opening-prefix_,_closing-prefix_[,_n-th_])
+ Retrieve the part of the separator list from _opening-prefix_ to _closing-prefix_ (inclusive).
+ Alternatively return the _n-th_ occurrence of the _opening-prefix_/_closing-prefix_ combination.
+ This function servers to select e.g. parenthesized parts of a string.
+
+
+#### $(call get-sufx-range,_separator-list_,_opening-suffix_,_closing-suffix_[,_n-th_])
+ Retrieve the part of the separator list from _opening-suffix_ to _closing-suffix_ (inclusive).
+ Alternatively return the _n-th_ occurrence of the _opening-suffix_/_closing-suffix_ combination.
+ This function servers to select e.g. parenthesized parts of a string.
+
 ### List functions
 
 #### $(call uniq-sufx,_list_,_binary-literal_)

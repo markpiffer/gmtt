@@ -233,6 +233,14 @@ are not.
  - `$(call chop-str,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-as-str),num $(-digit-as-str),sep :)` --> ` alpha¤Thu alpha¤Nov num¤30 num¤18 sep¤: num¤43 sep¤: num¤22 alpha¤CET num¤2017`
  - `$(call chop-str-spc,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-as-str),num $(-digit-as-str),sep :)` --> ` alpha¤Thu§Nov§ num¤30 alpha¤§ num¤18 sep¤: num¤43 sep¤: num¤22 alpha¤§CET§ num¤2017`
 
+#### Predefined character classes for chop-str et al
+ - `$(-upper-as-str) := ABCDEFGHIJKLMNOPQRSTUVWXYZ`
+ - `$(-lower-as-str) := abcdefghijklmnopqrstuvwxyz`
+ - `$(-digit-as-str) := 0123456789`
+ - `$(-xdigit-as-str) := 0123456789abcdefABCDEF`
+ - `$(-alpha-as-str) := ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`
+ - `$(-alnum-as-str) := 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`
+
 #### $(call drop-prfx,_separator-list_)
  Clear the prefixes from a separator list. A separator list
  is a make list with a prefix name prepended to each list

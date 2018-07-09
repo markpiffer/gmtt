@@ -110,12 +110,19 @@ explode = $(if $1,$(subst $(firstword $1),$(firstword $1) ,$(call explode,$(word
 ## - `$(call implode,some\ awkward\ Windows\ path)` --> `some\awkward\Windows\path`
 implode = $(subst $(space),,$(strip $1))
 
--upper- := $(call implode,$([upper]))
--lower- := $(call implode,$([lower]))
--digit- := $(call implode,$([digit]))
--xdigit- := $(call implode,$([xdigit]))
--alpha- := $(call implode,$([alpha]))
--alnum- := $(call implode,$([alnum]))
+###### Predefined character classes for chop-str et al
+## - `$(-upper-as-str) := ABCDEFGHIJKLMNOPQRSTUVWXYZ`
+## - `$(-lower-as-str) := abcdefghijklmnopqrstuvwxyz`
+## - `$(-digit-as-str) := 0123456789`
+## - `$(-xdigit-as-str) := 0123456789abcdefABCDEF`
+## - `$(-alpha-as-str) := ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`
+## - `$(-alnum-as-str) := 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`
+-upper-as-str := $(call implode,$([upper]))
+-lower-as-str := $(call implode,$([lower]))
+-digit-as-str := $(call implode,$([digit]))
+-xdigit-as-str := $(call implode,$([xdigit]))
+-alpha-as-str := $(call implode,$([alpha]))
+-alnum-as-str := $(call implode,$([alnum]))
 
 #----------------------------------------------------------------------
 ###### $(call spc-mask,_string_)
@@ -386,9 +393,9 @@ glob-match = $(call -glob-match,$(call explode,$(-match-chars),$(subst $(space),
 ## internal character by simply applying `$(call
 ## spc-unmask,_string-chunk-from-result_)`.
 ## Examples:
-## - `$(call chop-str,Linux 4.13.0-17-generic,A $(-alpha-),1 $(-digit-),. .-+?)` --> ` A¤Linux 1¤4 .¤. 1¤13 .¤. 1¤0 .¤- 1¤17 .¤- A¤generic`
-## - `$(call chop-str,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-),num $(-digit-),sep :)` --> ` alpha¤Thu alpha¤Nov num¤30 num¤18 sep¤: num¤43 sep¤: num¤22 alpha¤CET num¤2017`
-## - `$(call chop-str-spc,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-),num $(-digit-),sep :)` --> ` alpha¤Thu§Nov§ num¤30 alpha¤§ num¤18 sep¤: num¤43 sep¤: num¤22 alpha¤§CET§ num¤2017`
+## - `$(call chop-str,Linux 4.13.0-17-generic,A $(-alpha-as-str),1 $(-digit-as-str),. .-+?)` --> ` AÂ¤Linux 1Â¤4 .Â¤. 1Â¤13 .Â¤. 1Â¤0 .Â¤- 1Â¤17 .Â¤- AÂ¤generic`
+## - `$(call chop-str,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-as-str),num $(-digit-as-str),sep :)` --> ` alphaÂ¤Thu alphaÂ¤Nov numÂ¤30 numÂ¤18 sepÂ¤: numÂ¤43 sepÂ¤: numÂ¤22 alphaÂ¤CET numÂ¤2017`
+## - `$(call chop-str-spc,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-as-str),num $(-digit-as-str),sep :)` --> ` alphaÂ¤ThuÂ§NovÂ§ numÂ¤30 alphaÂ¤Â§ numÂ¤18 sepÂ¤: numÂ¤43 sepÂ¤: numÂ¤22 alphaÂ¤Â§CETÂ§ numÂ¤2017`
 chop-str = $(call -chop-str,$(call explode,$(all-chars) $(-spacereplace) $(-separator) $(-never-matching),$(subst $(space),$(-never-matching),$1)),,$2,$3,$4,$5)
 chop-str-spc = $(call chop-str,$(call spc-mask,$1),$2$(-spacereplace),$3,$4,$5)
 
@@ -398,18 +405,18 @@ chop-str-spc = $(call chop-str,$(call spc-mask,$1),$2$(-spacereplace),$3,$4,$5)
 # $4 - 2nd string group (optional)
 # $5 - 3rd string group (optional)
 # $6 - 4th string group (optional)
--chop-str = $(-gmtt-dbg-args)$(if $1,$(if $(findstring $(firstword $1),$(lastword $3)),$(call -chop-str-3,$(wordlist 2,2147483647,$1),$2 $(firstword $3)$(-separator)$(firstword $1),$3,$4,$5,$6),$(if $(findstring $(firstword $1),$(lastword $4)),$(call -chop-str-4,$(wordlist 2,2147483647,$1),$2 $(firstword $4)$(-separator)$(firstword $1),$3,$4,$5,$6),$(if $(findstring $(firstword $1),$(lastword $5)),$(call -chop-str-5,$(wordlist 2,2147483647,$1),$2 $(firstword $5)$(-separator)$(firstword $1),$3,$4,$5,$6),$(if $(findstring $(firstword $1),$(lastword $6)),$(call -chop-str-6,$(wordlist 2,2147483647,$1),$2 $(firstword $6)$(-separator)$(firstword $1),$3,$4,$5,$6),$(call -chop-str,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$6))))),$2)
--chop-str-3 = $(-gmtt-dbg-args)$(if $(findstring $(firstword $1),$(lastword $3)),$(call -chop-str-3,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -chop-str,$1,$2,$3,$4,$5,$6))
--chop-str-4 = $(-gmtt-dbg-args)$(if $(findstring $(firstword $1),$(lastword $4)),$(call -chop-str-4,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -chop-str,$1,$2,$3,$4,$5,$6))
--chop-str-5 = $(-gmtt-dbg-args)$(if $(findstring $(firstword $1),$(lastword $5)),$(call -chop-str-5,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -chop-str,$1,$2,$3,$4,$5,$6))
--chop-str-6 = $(-gmtt-dbg-args)$(if $(findstring $(firstword $1),$(lastword $6)),$(call -chop-str-6,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -chop-str,$1,$2,$3,$4,$5,$6))
+-chop-str = $(if $1,$(if $(findstring $(firstword $1),$(lastword $3)),$(call -chop-str-3,$(wordlist 2,2147483647,$1),$2 $(firstword $3)$(-separator)$(firstword $1),$3,$4,$5,$6),$(if $(findstring $(firstword $1),$(lastword $4)),$(call -chop-str-4,$(wordlist 2,2147483647,$1),$2 $(firstword $4)$(-separator)$(firstword $1),$3,$4,$5,$6),$(if $(findstring $(firstword $1),$(lastword $5)),$(call -chop-str-5,$(wordlist 2,2147483647,$1),$2 $(firstword $5)$(-separator)$(firstword $1),$3,$4,$5,$6),$(if $(findstring $(firstword $1),$(lastword $6)),$(call -chop-str-6,$(wordlist 2,2147483647,$1),$2 $(firstword $6)$(-separator)$(firstword $1),$3,$4,$5,$6),$(call -chop-str,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$6))))),$2)
+-chop-str-3 = $(if $(findstring $(firstword $1),$(lastword $3)),$(call -chop-str-3,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -chop-str,$1,$2,$3,$4,$5,$6))
+-chop-str-4 = $(if $(findstring $(firstword $1),$(lastword $4)),$(call -chop-str-4,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -chop-str,$1,$2,$3,$4,$5,$6))
+-chop-str-5 = $(if $(findstring $(firstword $1),$(lastword $5)),$(call -chop-str-5,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -chop-str,$1,$2,$3,$4,$5,$6))
+-chop-str-6 = $(if $(findstring $(firstword $1),$(lastword $6)),$(call -chop-str-6,$(wordlist 2,2147483647,$1),$2$(firstword $1),$3,$4,$5,$6),$(call -chop-str,$1,$2,$3,$4,$5,$6))
 
 
 ###### $(call drop-prfx,_separator-list_)
 ## Clear the prefixes from a separator list. A separator list
 ## is a make list with a prefix name prepended to each list
 ## element and the internal character `$(-separator)` between them
-## e.g. `alpha¤Linux  num¤4  dot¤.  num¤2`. 
+## e.g. `alphaÂ¤Linux  numÂ¤4  dotÂ¤.  numÂ¤2`. 
 drop-prfx = $(filter-out %$(-separator),$(subst $(-separator),$(-separator) ,$1))
 
 ###### $(call drop-sufx,_separator-list_)
@@ -417,7 +424,7 @@ drop-prfx = $(filter-out %$(-separator),$(subst $(-separator),$(-separator) ,$1)
 ## What remains is a list of prefixes only . A separator list
 ## is a make list with a prefix name prepended to each list
 ## element and the internal character `$(-separator)` between them
-## e.g. `alpha¤Linux  num¤4  dot¤.  num¤2`. 
+## e.g. `alphaÂ¤Linux  numÂ¤4  dotÂ¤.  numÂ¤2`. 
 drop-sufx = $(filter-out $(-separator)%,$(subst $(-separator), $(-separator),$1))
 
 ###### $(call filter-prfx,_separator-list_,_prefix-1_ [_prefix-2_.._prefix-n_])
@@ -426,20 +433,26 @@ filter-out-prfx = $(filter-out $(addsuffix $(-separator)%,$2),$1)
 filter-sufx = $(filter $(addprefix %$(-separator),$2),$1)
 filter-out-sufx = $(filter-out $(addprefix %$(-separator),$2),$1)
 
-###### $(call get-prfx-val,_separator-list_,_prefix-1_ [_prefix-2_.._prefix-n_][,_mth_[,_nth_]])
+###### $(call get-prfx-val,_separator-list_,_prefix-1_ [_prefix-2_.._prefix-n_][,_m-th_[,_n-th_]])
 ## Retrieve the value with the given prefixes from the separator list.
 ## Optionally select not the first but the _mth_ occurrence of this
-## prefix value or a range from the _mth_ to the _nth_ occurrence.
-get-prfx-val = $(-gmtt-dbg-args)$(wordlist $(call decimal-inc,$3),$(call decimal-inc,$(or $4,$3)),$(call drop-prfx,$(filter $(addprefix %$(-separator),$2),$1)))
-get-sufx-val = $(-gmtt-dbg-args)$(wordlist $(call decimal-inc,$3),$(call decimal-inc,$(or $4,$3)),$(call drop-prfx,$(filter $(addsuffix $(-separator)%,$2),$1)))
+## prefix value or a range from the _m-th_ to the _n-th_ (inclusive) occurrence.
+get-prfx-val = $(wordlist $(call decimal-inc,$3),$(call decimal-inc,$(or $4,$3)),$(call drop-sufx,$(filter $(addprefix %$(-separator),$2),$1)))
+get-sufx-val = $(wordlist $(call decimal-inc,$3),$(call decimal-inc,$(or $4,$3)),$(call drop-prfx,$(filter $(addsuffix $(-separator)%,$2),$1)))
 
-###### $(call get-prfx-range,_separator-list_,_first-prefix_,_last-prefix_[,_nth_])
-## 
-get-prfx-range = $(-gmtt-dbg-args)$(if $(filter %$(-separator)$2,$(firstword $1)),$(call -get-prfx-range,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$(firstword $1)),$(if $1,$(call get-prfx-range,$(wordlist 2,2147483647,$1),$2,$3,$(or $4,0),$(or $5,0))))
--get-prfx-range = $(-gmtt-dbg-args)$(if $1,$(if $(filter %$(-separator)$3,$(firstword $1)),$(if $(call str-eq,$4,$5),$6 $(firstword $1),$(call get-prfx-range,$1,$2,$3,$4,$(call decimal-inc,$5))),$(call -get-prfx-range,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$6 $(firstword $1))),$6)
+###### $(call get-prfx-range,_separator-list_,_opening-prefix_,_closing-prefix_[,_n-th_])
+## Retrieve the part of the separator list from _opening-prefix_ to _closing-prefix_ (inclusive).
+## Alternatively return the _n-th_ occurrence of the _opening-prefix_/_closing-prefix_ combination.
+## This function servers to select e.g. parenthesized parts of a string.
+get-prfx-range = $(if $(filter $2$(-separator)%,$(firstword $1)),$(call -get-prfx-range,$(wordlist 2,2147483647,$1),$2,$3,$(or $4,0),$(or $5,0),$(firstword $1)),$(if $1,$(call get-prfx-range,$(wordlist 2,2147483647,$1),$2,$3,$(or $4,0),$(or $5,0))))
+-get-prfx-range = $(if $1,$(if $(filter $3$(-separator)%,$(firstword $1)),$(if $(call str-eq,$4,$5),$6 $(firstword $1),$(call get-prfx-range,$1,$2,$3,$4,$(call decimal-inc,$5))),$(call -get-prfx-range,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$6 $(firstword $1))))
 
-get-sufx-range = $(-gmtt-dbg-args)$(if $(filter $2$(-separator)%,$(firstword $1)),$(call -get-sufx-range,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$(firstword $1)),$(if $1,$(call get-sufx-range,$(wordlist 2,2147483647,$1),$2,$3,$(or $4,0),$(or $5,0))))
--get-sufx-range = $(-gmtt-dbg-args)$(if $1,$(if $(filter $3$(-separator)%,$(firstword $1)),$(if $(call str-eq,$4,$5),$6 $(firstword $1),$(call get-sufx-range,$1,$2,$3,$4,$(call decimal-inc,$5))),$(call -get-sufx-range,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$6 $(firstword $1))),$6)
+###### $(call get-sufx-range,_separator-list_,_opening-suffix_,_closing-suffix_[,_n-th_])
+## Retrieve the part of the separator list from _opening-suffix_ to _closing-suffix_ (inclusive).
+## Alternatively return the _n-th_ occurrence of the _opening-suffix_/_closing-suffix_ combination.
+## This function servers to select e.g. parenthesized parts of a string.
+get-sufx-range = $(if $(filter %$(-separator)$2,$(firstword $1)),$(call -get-sufx-range,$(wordlist 2,2147483647,$1),$2,$3,$(or $4,0),$(or $5,0),$(firstword $1)),$(if $1,$(call get-sufx-range,$(wordlist 2,2147483647,$1),$2,$3,$(or $4,0),$(or $5,0))))
+-get-sufx-range = $(if $1,$(if $(filter %$(-separator)$3,$(firstword $1)),$(if $(call str-eq,$4,$5),$6 $(firstword $1),$(call get-sufx-range,$1,$2,$3,$4,$(call decimal-inc,$5))),$(call -get-sufx-range,$(wordlist 2,2147483647,$1),$2,$3,$4,$5,$6 $(firstword $1))))
 
 #----------------------------------------------------------------------
 ###### $(call uniq-sufx,_list_,_binary-literal_)

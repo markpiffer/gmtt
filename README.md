@@ -229,15 +229,15 @@ are not.
  internal character by simply applying `$(call
  spc-unmask,_string-chunk-from-result_)`.
  Examples:
- - `$(call chop-str,Linux 4.13.0-17-generic,A $(-alpha-as-str),1 $(-digit-as-str),. .-+?)` --> ` AÂ¤Linux 1Â¤4 .Â¤. 1Â¤13 .Â¤. 1Â¤0 .Â¤- 1Â¤17 .Â¤- AÂ¤generic`
- - `$(call chop-str,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-as-str),num $(-digit-as-str),sep :)` --> ` alphaÂ¤Thu alphaÂ¤Nov numÂ¤30 numÂ¤18 sepÂ¤: numÂ¤43 sepÂ¤: numÂ¤22 alphaÂ¤CET numÂ¤2017`
- - `$(call chop-str-spc,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-as-str),num $(-digit-as-str),sep :)` --> ` alphaÂ¤ThuÂ§NovÂ§ numÂ¤30 alphaÂ¤Â§ numÂ¤18 sepÂ¤: numÂ¤43 sepÂ¤: numÂ¤22 alphaÂ¤Â§CETÂ§ numÂ¤2017`
+ - `$(call chop-str,Linux 4.13.0-17-generic,A $(-alpha-as-str),1 $(-digit-as-str),. .-+?)` --> ` A¤Linux 1¤4 .¤. 1¤13 .¤. 1¤0 .¤- 1¤17 .¤- A¤generic`
+ - `$(call chop-str,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-as-str),num $(-digit-as-str),sep :)` --> ` alpha¤Thu alpha¤Nov num¤30 num¤18 sep¤: num¤43 sep¤: num¤22 alpha¤CET num¤2017`
+ - `$(call chop-str-spc,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-as-str),num $(-digit-as-str),sep :)` --> ` alpha¤Thu§Nov§ num¤30 alpha¤§ num¤18 sep¤: num¤43 sep¤: num¤22 alpha¤§CET§ num¤2017`
 
 #### $(call drop-prfx,_separator-list_)
  Clear the prefixes from a separator list. A separator list
  is a make list with a prefix name prepended to each list
  element and the internal character `$(-separator)` between them
- e.g. `alphaÂ¤Linux  numÂ¤4  dotÂ¤.  numÂ¤2`. 
+ e.g. `alpha¤Linux  num¤4  dot¤.  num¤2`. 
 
 
 #### $(call drop-sufx,_separator-list_)
@@ -245,7 +245,7 @@ are not.
  What remains is a list of prefixes only . A separator list
  is a make list with a prefix name prepended to each list
  element and the internal character `$(-separator)` between them
- e.g. `alphaÂ¤Linux  numÂ¤4  dotÂ¤.  numÂ¤2`. 
+ e.g. `alpha¤Linux  num¤4  dot¤.  num¤2`. 
 
 
 #### $(call get-prfx-val,_separator-list_,_prefix-1_ [_prefix-2_.._prefix-n_][,_m-th_[,_n-th_]])

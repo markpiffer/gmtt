@@ -201,7 +201,7 @@ are not.
  - `$(call glob-match,Linux 2.6.32-431.el6.i686,Linux 2.6.*.i686)` --> `Linux§2.6. 32-431.el6 .i686`
  - `$(call glob-match,down/to/unknown/dir/file.txt,down/*/*/*/*.txt)` --> `down/ to / unknown / dir / file .txt`
 
-#### `$(call chop-str,_string_,_group-string_[,_group-string_[,_group-string_[,_group-string_]]])`
+#### $(call chop-str,_string_,_group-string_[,_group-string_[,_group-string_[,_group-string_]]])
  Dissect given _string_ into chunks of characters belonging to the
  same _group-string_ and return the result as a separator list. A
  _group-string_ is a tuple of an _identifier_ string and a

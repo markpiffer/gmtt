@@ -450,3 +450,19 @@ Examples:
 - `$(call join-tbl,1 one two,2 first 1st second 2nd third 3rd)` --> `3 one first 1st two second 2nd one third 3rd`
 - `$(call join-tbl,2 one apple two oranges,1 1st 2nd 3rd,/*NIL*/)` --> `3 one apple 1st two oranges 2nd /*NIL*/ /*NIL*/ 3rd`
 
+### Miscellaneous Functions
+
+#### $(call verbose,[_string0_],[_string1_],[_string2_],[_string3_],[_string4_],[_string5_],[_string6_],[_string7_],[_string8_],[_string9_])
+ Write strings to stdout depending on warning level. The global variable `VERBOSITY`
+ needs to be defined as a string of numerals from 0..9. This will  trigger the output
+ of the according strings for all `$(call verbosity ...)` invocations in the makefile.
+ Verbosity is additive, *not* hierarchical, i.e. `VERBOSITY=9` will not effect the output
+ of all warnings/info-strings from level 0 to 9 but only for level 9. To output a
+ combination or selection, set e.g. `VERBOSITY = 01289`.
+ Examples:
+ - `VERBOSITY = 0`
+ - `$(call verbose,warninglevel 0,warninglevel 1,warninglevel 2,info 1,info 2,info 3)` -> `warninglevel 0`
+ - `VERBOSITY = 2`
+ - `$(call verbose,warninglevel 0,warninglevel 1,warninglevel 2,info 1,info 2,info 3)` -> `warninglevel 2`
+ - `VERBOSITY = 012345`
+ - `$(call verbose,warninglevel 0,warninglevel 1,warninglevel 2,info 1,info 2,info 3)` -> `warninglevel 0 warninglevel 1 warninglevel 2 info 1 info 2 info 3`

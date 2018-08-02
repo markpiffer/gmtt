@@ -558,24 +558,6 @@ down-to = $(call rev-list,$(call up-to,$1,$(call rev-list,$2)))
 ## - `$(call down-from,foo,foo bar baz)` -> ` ` (empty list)
 down-from = $(call rev-list,$(call up-from,$1,$(call rev-list,$2)))
 
-
-#----------------------------------------------------------------------
-# $1 filename
-# $2 dirname (all subdirectories will be searched too)
-search-down=$(if $(wildcard $2/$1),$(wildcard $2/$1),$(foreach dir,$(wildcard $2/*/.),$(call search-down,$1,$(subst /.$(space),,$(dir)$(space)))))
-
-#----------------------------------------------------------------------
-# $1 filename
-# $2 dirname within which (+subdirectories) filename is to be found
-# $3 current directory
-search-up=$(if $(wildcard $3/$1),$(wildcard $3/$1),$(if $(wildcard $3/$2),$(call search-down,$1,$3/$2),$(call search-up,$1,$2,$3/..)))
-
-#----------------------------------------------------------------------
-# $1 filename
-# $2 dirname within which (+subdirectories) filename is to be found
-search-above=$(firstword $(call search-up,$1,$2,$(wildcard .)))
-
-
 #----------------------------------------------------------------------
 -num-limit := 64
 
@@ -1322,6 +1304,44 @@ join-tbl = $(call add,$(word 1,$1),$(word 1,$2)) $(call -join-tbl,$(call -chop-r
 -join-tbl = $(call --join-tbl,$1,$2,$(call sub,$(words $1),$(words $2)),$3,$4)
 --join-tbl = $(if $(findstring -,$3),$(call ---join-tbl,$1 $(call n-list,$(or $4,$1),$(subst -,,$3)),$2),$(if $(subst 0,,$3),$(call ---join-tbl,$1,$2 $(call n-list,$(or $5,$2),$3)),$(call ---join-tbl,$1,$2)))
 ---join-tbl = $(subst $(-separator), ,$(join $(patsubst %,%$(-separator),$1),$2))
+
+
+##### Miscellaneous Functions
+
+#----------------------------------------------------------------------
+###### $(call verbose,[_string1_],[_string2_],[_string3_],[_string4_],[_string5_],[_string6_],[_string7_],[_string8_],[_string9_])
+## Write strings to stdout depending on warning level. The global variable `VERBOSITY`
+## needs to be defined as a string of numerals from 0..9, e.g. `VERBOSITY = 01289`. This will 
+## trigger the output of parameters 1,2,3,9 and 10 for all `$(call verbosity ...)` invocations in
+## the makefile. Verbosity is additive, *not* hierarchical, i.e. `VERBOSITY=9` will not effect the output
+## of all warnings/info-strings from level 0 to 9 but only for level 9. 
+## Examples:
+## - `VERBOSITY = 0`
+## - `$(call verbose,warninglevel 0,warninglevel 1,warninglevel 2,info 1,info 2,info 3)` -> `warninglevel 0`
+## - `VERBOSITY = 2`
+## - `$(call verbose,warninglevel 0,warninglevel 1,warninglevel 2,info 1,info 2,info 3)` -> `warninglevel 2`
+## - `VERBOSITY = 012345`
+## - `$(call verbose,warninglevel 0,warninglevel 1,warninglevel 2,info 1,info 2,info 3)` -> `warninglevel 0 warninglevel 1 warninglevel 2 info 1 info 2 info 3`
+verbose = $(if $(VERBOSITY),$(info $(-verbose)))
+-verbose = $(if $(findstring 0,$(VERBOSITY)),$1 )$(if $(findstring 1,$(VERBOSITY)),$2 )$(if $(findstring 2,$(VERBOSITY)),$3 )$(if $(findstring 3,$(VERBOSITY)),$4 )$(if $(findstring 4,$(VERBOSITY)),$5 )$(if $(findstring 5,$(VERBOSITY)),$6 )$(if $(findstring 6,$(VERBOSITY)),$7 )$(if $(findstring 7,$(VERBOSITY)),$8 )$(if $(findstring 8,$(VERBOSITY)),$9 )$(if $(findstring 9,$(VERBOSITY)),$(10) )
+
+#----------------------------------------------------------------------
+# Return list of all files with the given _filename_ in the tree starting at _dirname_
+# $1 filename
+# $2 dirname (all subdirectories will be searched too)
+search-down=$(if $(wildcard $2/$1),$(wildcard $2/$1))$(foreach dir,$(wildcard $2/*/.),$(call search-down,$1,$(subst /.$(space),,$(dir)$(space))))
+
+#----------------------------------------------------------------------
+# Return list of all files 
+# $1 filename
+# $2 dirname within which (+subdirectories) filename is to be found
+# $3 current directory
+search-up=$(if $(wildcard $3/$1),$(wildcard $3/$1))$(if $(wildcard $3/$2),$(call search-down,$1,$3/$2),$(call search-up,$1,$2,$3/..)))
+
+#----------------------------------------------------------------------
+# $1 filename
+# $2 dirname within which (+subdirectories) filename is to be found
+search-above=$(firstword $(call search-up,$1,$2,$(wildcard .)))
 
 
 

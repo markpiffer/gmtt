@@ -1343,6 +1343,17 @@ search-up=$(if $(wildcard $3/$1),$(wildcard $3/$1))$(if $(wildcard $3/$2),$(call
 # $2 dirname within which (+subdirectories) filename is to be found
 search-above=$(firstword $(call search-up,$1,$2,$(wildcard .)))
 
+#----------------------------------------------------------------------
+###### $(call collect-files-uniq,_list-of-globs_)
+## Return a list with the full path + name of all files which match one of the glob
+## expressions. If files of the same name exist under different
+## paths, the first glob which matches takes precedence and all further appearances
+## of this file are ignored (i.e. not returned).
+## Example: `$(call collect-files-uniq,dir1/*.c dir2/*.c dir2/foo.h dir1/*.h dir2/*.h)`
+## This returns all files ending in `.c` from `dir1` and also those from `dir2` which didn't appear
+## in earlier. Moreover, `dir2/foo.h` (if it exists) takes presecedence over a possible `dir1/foo.h`.
+collect-files-uniq = $(-gmtt-dbg-args)$(if $1,$(call -collect-files-uniq,$(wordlist 2,2147483647,$1),$2,$3,$(filter-out $3,$(wildcard $(firstword $1)))),$2)
+-collect-files-uniq = $(-gmtt-dbg-args)$(call collect-files-uniq,$1,$2 $4,$3 $(addprefix %/,$(notdir $4)))
 
 
 #----------------------------------------------------------------------

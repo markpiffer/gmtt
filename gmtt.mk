@@ -499,7 +499,7 @@ list2param = $(subst $(space),$(comma),$(strip $1))
 ## extra '$' (see examples). _params_ is a list of parameters separated by commas
 ## (see list2params function) which is given as the call parameters _$1_,_$2_,etc.
 ## to the function expression. 
-exec = $(eval -exec=$1)$(eval -exec:=$$(call -exec,$(call list2param,$2)))$(-exec)
+exec = $(eval -exec=$1)$(eval -exec:=$$(call -exec,$(call list2param,$(subst $(hash),$$(hash),$2))))$(-exec)
 lambda2 = $(eval -lambda2=$2)$(eval -lambda2:=$$(call -lambda2$(subst $(space),,$(wordlist 1,$1,$(lambda-param)))))$(-lambda2)
 
 lambda-param := ,$$3 ,$$4  ,$$5 ,$$6 ,$$7 ,$$8 ,$$9 ,$$10 ,$$11 ,$$12 ,$$13 ,$$14 ,$$15 ,$$16 ,$$17 ,$$18 ,$$19 ,$$20 ,$$21 ,$$22 ,$$23 ,$$24 ,$$25 ,$$26 ,$$27 ,$$28 ,$$29 ,$$30 ,$$31 ,$$32 ,$$33

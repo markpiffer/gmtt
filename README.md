@@ -241,6 +241,16 @@ are not.
  - `$(-alpha-as-str) := ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`
  - `$(-alnum-as-str) := 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`
 
+#### $(call spc-mask,_string_)
+ Replace all occurrences of space in the given string with the
+ `$(-spacereplace)` character. This function can be used to convert
+ strings with spaces into valid list elements (which must not contain
+ spaces). 
+
+#### $(call spc-unmask,_string_)
+ Replace all occurrences of the character `$(-spacereplace)` with a
+ true space character. The inverse of the `spc-mask` function.
+
 #### $(call drop-prfx,_separator-list_)
  Clear the prefixes from a separator list. A separator list
  is a make list with a prefix name prepended to each list

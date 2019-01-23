@@ -130,13 +130,12 @@ implode = $(subst $(space),,$(strip $1))
 ## `$(-spacereplace)` character. This function can be used to convert
 ## strings with spaces into valid list elements (which must not contain
 ## spaces). 
-spc-mask = $(subst $(space),$(-spacereplace),$1)
+spc-mask = $(subst $(space),$(-spacereplace),$1)$(if $2$3$4$5$6$7$8$9$(10)$(11)$(12)$(13)$(14)$(15)$(16)$(17)$(18)$(19)$(20)$(21)$(22)$(23)$(24)$(25)$(26)$(27)$(28)$(29)$(30)$(31)$(32),$(comma)$(call spc-mask,$2,$3,$4,$5,$6,$7,$8,$9,$(10),$(11),$(12),$(13),$(14),$(15),$(16),$(17),$(18),$(19),$(20),$(21),$(22),$(23),$(24),$(25),$(26),$(27),$(28),$(29),$(30),$(31),$(32)))
 
 ###### $(call spc-unmask,_string_)
 ## Replace all occurrences of the character `$(-spacereplace)` with a
 ## true space character. The inverse of the `spc-mask` function.
-spc-unmask = $(subst $(-spacereplace),$(space),$1)
-
+spc-unmask = $(subst $(-spacereplace),$(space),$1)$(if $2$3$4$5$6$7$8$9$(10)$(11)$(12)$(13)$(14)$(15)$(16)$(17)$(18)$(19)$(20)$(21)$(22)$(23)$(24)$(25)$(26)$(27)$(28)$(29)$(30)$(31)$(32),$(comma)$(call spc-unmask,$2,$3,$4,$5,$6,$7,$8,$9,$(10),$(11),$(12),$(13),$(14),$(15),$(16),$(17),$(18),$(19),$(20),$(21),$(22),$(23),$(24),$(25),$(26),$(27),$(28),$(29),$(30),$(31),$(32)))
 
 #----------------------------------------------------------------------
 # List of match characters for globbing separated by space. All special

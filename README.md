@@ -31,6 +31,7 @@ x1|y2    /*void*/      x3|y2
 /*void*/   x2|y3       x3|y3
 endef
 ```
+You can alternatively use the `spc-mask` function (and its inverse `spc-unmask`) to concatenate strings with spaces into one table entry. But as always in *make*, using spaces in the processing of arguments requires much care and endurance to get it right.
 
 #### Functions on tables
 - sort / reverse sort

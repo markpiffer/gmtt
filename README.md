@@ -340,8 +340,8 @@ are not.
 #### $(call down-to,_word_,_list_)
  Return the last part of _list_, searching from the end down to but
  excluding the last occurrence of _word_.
- If _word_ is not in _list_, the whole list is returned. This operation is so
- common in dissecting e.g. path that it was introduced for convenience.
+ If _word_ is not in _list_, the whole list is returned. This operation is 
+ helpful in dissecting e.g. path expressions (´/´ substituted by ´ ´ or ´/ ´)
  Examples:
  - `$(call down-to,baz,foo baz bar baz)` -> ` ` (empty list)
  - `$(call down-to,foo,foo foo bar baz)` -> `bar baz`
@@ -349,8 +349,8 @@ are not.
 #### $(call down-from,_word_,_list_)
  Return the first part of _list_, searching from the end down to but
  excluding the last occurrence of _word_.
- If _word_ is not in _list_, the whole list is returned. This operation is so
- common in dissecting e.g. path that it was introduced for convenience.
+ If _word_ is not in _list_, the empty list is returned. This operation is 
+ helpful in dissecting e.g. path expressions (´/´ substituted by ´ ´ or ´/ ´)
  Examples:
  - `$(call down-from,baz,foo baz bar baz)` -> `foo baz bar`
  - `$(call down-from,foo,foo bar baz)` -> ` ` (empty list)

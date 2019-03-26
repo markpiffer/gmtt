@@ -189,7 +189,7 @@ binary-inc = $(if $1,$(if $(patsubst %1,,$1),$(patsubst %0,%1,$1),$(call binary-
 ## Count the _decimal-literal_ up by 1, yielding the following decimal literal.
 ## Leading zeros are preserved.
 ## - `$(call decimal-inc,0099)` -> `0100`
-decimal-inc = $(if $1,$(if $(patsubst %9,,$1),$(if $(patsubst %8,,$1),$(if $(patsubst %7,,$1),$(if $(patsubst %6,,$1),$(if $(patsubst %5,,$1),$(if $(patsubst %4,,$1),$(if $(patsubst %3,,$1),$(if $(patsubst %2,,$1),$(if $(patsubst %1,,$1),$(patsubst %0,%1,$1),$(patsubst %1,%2,$1)),$(patsubst %2,%3,$1)),$(patsubst %3,%4,$1)),$(patsubst %4,%5,$1)),$(patsubst %5,%6,$1)),$(patsubst %6,%7,$1)),$(patsubst %7,%8,$1)),$(patsubst %8,%9,$1)),$(call dec-cnt,$(patsubst %9,%,$1))0),1)
+decimal-inc = $(if $1,$(if $(patsubst %9,,$1),$(if $(patsubst %8,,$1),$(if $(patsubst %7,,$1),$(if $(patsubst %6,,$1),$(if $(patsubst %5,,$1),$(if $(patsubst %4,,$1),$(if $(patsubst %3,,$1),$(if $(patsubst %2,,$1),$(if $(patsubst %1,,$1),$(patsubst %0,%1,$1),$(patsubst %1,%2,$1)),$(patsubst %2,%3,$1)),$(patsubst %3,%4,$1)),$(patsubst %4,%5,$1)),$(patsubst %5,%6,$1)),$(patsubst %6,%7,$1)),$(patsubst %7,%8,$1)),$(patsubst %8,%9,$1)),$(call decimal-inc,$(patsubst %9,%,$1))0),1)
 
 #----------------------------------------------------------------------
 ###### $(call symgen)

@@ -1228,13 +1228,14 @@ rsort-tbl = $(call -rsort-tbl,$(strip $1),$2)
 --rsort-tbl = $2 $(call -reorder-tbl,$1,$2,$(call -rsort-ix,$(foreach params,$(call -chop-rec,$1,$2),$(call exec,$3,$(subst $(-separator),$(space),$(params)))),$2))
 
 #----------------------------------------------------------------------
-# Print (or do sg. else) with a table
+# Map a function to each table line. The column elements of the table are 
+# passed as parameters to the lambda/function.
 # $1 - table
-# $2 - output function (takes one table line as parameters $1,$2,$3,etc.
-print-tbl = $(call -print-tbl,$(strip $1),$2)
--print-tbl = $(call --print-tbl,$(wordlist 2,2147483647,$1),$(firstword $1),$2)
---print-tbl = $(call ---print-tbl,$(call -chop-rec,$1,$2),$3)
----print-tbl = $(if $1,$(call exec,$2,$(firstword $1))$(call ---print-tbl,$(wordlist 2,2147483647,$1),$2))
+# $2 - output function (takes one table line as parameters $$1,$$2,$$3,etc.
+map-tbl = $(call -map-tbl,$(strip $1),$2)
+-map-tbl = $(call --map-tbl,$(wordlist 2,2147483647,$1),$(firstword $1),$2)
+--map-tbl = $(call ---map-tbl,$(call -chop-rec,$1,$2),$3)
+---map-tbl = $(if $1,$(call exec,$2,$(subst $(-separator),$(space),$(firstword $1)))$(call ---map-tbl,$(wordlist 2,2147483647,$1),$2))
 
 
 #----------------------------------------------------------------------

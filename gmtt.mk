@@ -54,6 +54,8 @@ semicolon := ;#
 -separator := ¤# character 164, used in various functions to compose/decompose strings
 -never-matching := ¥# character 165, this is used as a list element that should never appear as a real element
 -spacereplace := §# takes the place of space characters when needed
+-lparenreplace := «# charracter 171, needed in glob-match because "(" and ")" as matching character messes up the parser
+-rparenreplace := »# character 187
 
 #----------------------------------------------------------------------
 ###### `$(all-chars-q)`
@@ -305,6 +307,9 @@ str-match = $(if $(and $(patsubst _$(subst $(space),$(-separator),$(strip $1)),,
 # The particular functions are generated out of the list of characters.
 $(foreach c,$(-match-chars-q),$(eval -glob-match-$(c) = $$(if $$1,$$(if $$(findstring $$(firstword $$1),$(c)),$$(call -glob-match-$$(firstword $$2),$$(wordlist 2,2147483647,$$1),$$(wordlist 2,2147483647,$$2),$$(3)$(c))))))
 # Rewrite the matching functions for special characters in a glob pattern
+# opening and closing parentheses are replaced by special characters bcs the make parser gets confused
+-glob-match-$(-lparenreplace) = $(if $1,$(if $(findstring $(firstword $1),$(-lparenreplace)),$(call -glob-match-$(firstword $2),$(wordlist 2,2147483647,$1),$(wordlist 2,2147483647,$2),$(3)$(lparen))))
+-glob-match-$(-rparenreplace) = $(if $1,$(if $(findstring $(firstword $1),$(-rparenreplace)),$(call -glob-match-$(firstword $2),$(wordlist 2,2147483647,$1),$(wordlist 2,2147483647,$2),$(3)$(rparen))))
 # End of pattern:
 -glob-match- = $(if $1,,$3)
 # Asterisk - First try if the * matches the empty string and recurse
@@ -360,7 +365,7 @@ $(foreach c,$(-match-chars-q),$(eval -glob-match-$(c) = $$(if $$1,$$(if $$(finds
 ## Examples:
 ## - `$(call glob-match,Linux 2.6.32-431.el6.i686,Linux 2.6.*.i686)` --> `Linux§2.6. 32-431.el6 .i686`
 ## - `$(call glob-match,down/to/unknown/dir/file.txt,down/*/*/*/*.txt)` --> `down/ to / unknown / dir / file .txt`
-glob-match = $(call -glob-match,$(call explode,$(-match-chars),$(subst $(space),$(-spacereplace),$1)),$(call explode,$(-match-chars),$(subst $(space),$(-spacereplace),$2)))
+glob-match = $(call -glob-match,$(subst $(rparen),$(-rparenreplace),$(subst $(lparen),$(-lparenreplace),$(call explode,$(-match-chars),$(subst $(space),$(-spacereplace),$1)))),$(subst $(rparen),$(-rparenreplace),$(subst $(lparen),$(-lparenreplace),$(call explode,$(-match-chars),$(subst $(space),$(-spacereplace),$2)))))
 -glob-match = $(call -glob-match-$(firstword $2),$1,$(wordlist 2,2147483647,$2))
 
 

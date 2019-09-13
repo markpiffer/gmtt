@@ -463,6 +463,52 @@ Examples:
 
 ### Miscellaneous Functions
 
+#### $(call head,_list_)
+Functionally identical to `$(firstword )`. Return the head (first element) of a list.
+
+#### $(call tail,_list_)
+Return the second and subsequent elements of a list as a new list.
+
+
+#### $(call while,_quoted-condition_,_quoted-code_[,_quoted-exit-statements_])
+Execute a while loop of _quoted-code_ as long as _condition_ is true (not the empty string).
+All code statements need to be given as quoted make code (replace `$` with `$$`). 
+The code in _quoted-code_ and _quoted-exit-statements_ is `eval`ed in the while loop.
+This means that you can use variable assignments like in ordinary code BUT the assignments
+will be visible outside of the while loop! The optional _quoted-exit-statement_ is executed *always*
+when leaving the while loop, even when the loop body was never executed.
+- Example: filter out the `-mllvm` flags from the `CFLAGS` variable and put them in an extra variable
+```CFLAGS := -DFOO -DBAR -mllvm llvmflag1 -mllvm llvmflag2
+$(call while, $$(call glob-match,$$(CFLAGS),*-mllvm *),\
+   tmp := $$(call glob-match,$$(CFLAGS),*-mllvm *)$(newline)\
+   rest := $$(call spc-unmask,$$(word 3,$$(tmp)))$(newline)\
+   llvm_flg := $$(firstword $$(rest))$(newline)\
+   CFLAGS := $$(firstword $$(tmp)) $$(call tail,$$(rest))$(newline)\
+   $$(info [[[$$(tmp) --- $$(rest) --- $$(CFLAGS) ]]])$(newline)\
+   MLLVM_FLAGS+=$$(llvm_flg),\
+MLLVM_FLAGS := $$(strip $$(MLLVM_FLAGS))$(newline)\
+CFLAGS := $$(call spc-unmask,$$(CFLAGS))\
+)
+```
+- Condition: as long as `glob-match` returns a match of `-mllvm ` in `CFLAGS`
+- Body (notice the quoting of the newlines - this is necessary for `$(eval)` to correctly interpret the code):
+   * Extract the output of `glob-match` into a temporary variable (spaces are replaced in this output, see `glob-match`). The output is a list of three elements: all characters (`*`) up to `-mllvm `, the string `-mllvm ` itself (notice the space at the end) and all characters (`*`) following it.
+   * Convert back the rest of `CFLAGS` (behind the first `-mllvm ` match) into a string with spaces and put it into `rest`
+   * Pluck the argument to the `-mllvm` flag (which is the first element of `rest`) into `llvm_flg`
+   * Modify `CFLAGS` to contain everything except `-mllvm` and its argument
+   * Print the variables as a debugging aid
+   * Append the newly found argument of the `-mllvm` flag to the output variable
+- Exit statements:
+   * Pretty-print `MLLVM_FLAGS` 
+   * Remove the space replacement characters from `CFLAGS` which have accumulated during the loop
+- Output:
+```
+[[[ -DFOO§-DBAR§ -mllvm§ llvmflag1§-mllvm§llvmflag2 --- llvmflag1 -mllvm llvmflag2 --- -DFOO§-DBAR§ -mllvm llvmflag2 ]]]
+[[[ -DFOO§-DBAR§§ -mllvm§ llvmflag2 --- llvmflag2 --- -DFOO§-DBAR§§  ]]]
+CFLAGS = -DFOO -DBAR
+MLLVM_FLAGS = llvmflag1 llvmflag2
+```
+
 #### $(call verbose,[_string0_],[_string1_],[_string2_],[_string3_],[_string4_],[_string5_],[_string6_],[_string7_],[_string8_],[_string9_])
  Write strings to stdout depending on warning level. The global variable `VERBOSITY`
  needs to be defined as a string of numerals from 0..9. This will  trigger the output

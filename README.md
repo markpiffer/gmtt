@@ -478,7 +478,8 @@ This means that you can use variable assignments like in ordinary code BUT the a
 will be visible outside of the while loop! The optional _quoted-exit-statement_ is executed *always*
 when leaving the while loop, even when the loop body was never executed.
 - Example: filter out the `-mllvm` flags from the `CFLAGS` variable and put them in an extra variable
-```CFLAGS := -DFOO -DBAR -mllvm llvmflag1 -mllvm llvmflag2
+```
+CFLAGS := -DFOO -DBAR -mllvm llvmflag1 -mllvm llvmflag2
 $(call while, $$(call glob-match,$$(CFLAGS),*-mllvm *),\
    tmp := $$(call glob-match,$$(CFLAGS),*-mllvm *)$(newline)\
    rest := $$(call spc-unmask,$$(word 3,$$(tmp)))$(newline)\

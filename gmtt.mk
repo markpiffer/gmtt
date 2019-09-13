@@ -1313,6 +1313,35 @@ join-tbl = $(call add,$(word 1,$1),$(word 1,$2)) $(call -join-tbl,$(call -chop-r
 
 ##### Miscellaneous Functions
 
+###### $(call head,_list_)
+## Functionally identical to `$(firstword )`. Return the head (first element) of a list.
+head = $(firstword $1)
+
+###### $(call tail,_list_)
+## Return the second and subsequent elements of a list as a new list.
+tail = $(wordlist 2,2147483647,$1)
+
+###### $(call while,_quoted-condition_,_quoted-code_[,_quoted-last-statements_])
+## Execute a while loop of _quoted-code_ as long as _condition_ is true (not the empty string).
+## All code statements need to be given as quoted make code (replace `$` with `$$`). 
+## The code in _quoted-code_ and _quoted-last-statement_ is `eval`ed in the while loop.
+## This means that you can use variable assignments like in ordinary code BUT the assignments
+## will be visible outside of the while loop! The optional _quoted-last-statement_ is executed *always*
+## when leaving the while loop, even when the loop body was never executed.
+## Example: filter out the `-mllvm` flags from the `CFLAGS` variable and put them in an extra variable
+## `CFLAGS := -DFOO -DBAR -mllvm llvmflag1 -mllvm llvmflag2`
+## `$(call while, $$(call glob-match,$$(CFLAGS),*-mllvm *),\`
+## `   tmp := $$(call glob-match,$$(CFLAGS),*-mllvm *)$(newline)\`
+## `   rest := $$(call spc-unmask,$$(word 3,$$(tmp)))$(newline)\`
+## `   llvm_flg := $$(firstword $$(rest))$(newline)\`
+## `   CFLAGS := $$(firstword $$(tmp)) $$(call tail,$$(rest))$(newline)\`
+## `   $$(info [[[$$(tmp) --- $$(rest) --- $$(CFLAGS) ]]])$(newline)\`
+## `   MLLVM_FLAGS+=$$(llvm_flg),\`
+## `MLLVM_FLAGS := $$(strip $$(MLLVM_FLAGS))$(newline)\`
+## `CFLAGS := $$(call spc-unmask,$$(CFLAGS))\`
+## `)`
+while = $(if $(call exec,$1),$(eval $2)$(call while,$1,$2,$3),$(eval $3))
+
 #----------------------------------------------------------------------
 ###### $(call verbose,[_string1_],[_string2_],[_string3_],[_string4_],[_string5_],[_string6_],[_string7_],[_string8_],[_string9_])
 ## Write strings to stdout depending on warning level. The global variable `VERBOSITY`

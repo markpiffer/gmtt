@@ -493,7 +493,7 @@ CFLAGS := $$(call spc-unmask,$$(CFLAGS))\
 - Condition: as long as `glob-match` returns a match of `-mllvm ` in `CFLAGS`
 - Body (notice the quoting of the newlines - this is necessary for `$(eval)` to correctly interpret the code):
    * Extract the output of `glob-match` into a temporary variable (spaces are replaced in this output, see `glob-match`). The output is a list of three elements: all characters (`*`) up to `-mllvm `, the string `-mllvm ` itself (notice the space at the end) and all characters (`*`) following it.
-   * Convert back the rest of `CFLAGS` (behind the first `-mllvm ` match) into a string with spaces and put it into `rest`
+   * Convert back the third element (rest of `CFLAGS` behind the first `-mllvm ` match) into a string with spaces and put it into `rest`
    * Pluck the argument to the `-mllvm` flag (which is the first element of `rest`) into `llvm_flg`
    * Modify `CFLAGS` to contain everything except `-mllvm` and its argument
    * Print the variables as a debugging aid

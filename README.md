@@ -480,8 +480,8 @@ when leaving the while loop, even when the loop body was never executed.
 - Example: filter out the `-mllvm` flags from the `CFLAGS` variable and put them in an extra variable
 ```
 CFLAGS := -DFOO -DBAR -mllvm llvmflag1 -mllvm llvmflag2
-$(call while, $$(call glob-match,$$(CFLAGS),*-mllvm *),\
-   tmp := $$(call glob-match,$$(CFLAGS),*-mllvm *)$(newline)\
+$(call while, $$(call glob-match,$(space)$$(CFLAGS),*-mllvm *),\
+   tmp := $$(call glob-match,$(space)$$(CFLAGS),*-mllvm *)$(newline)\
    rest := $$(call spc-unmask,$$(word 3,$$(tmp)))$(newline)\
    llvm_flg := $$(firstword $$(rest))$(newline)\
    CFLAGS := $$(firstword $$(tmp)) $$(call tail,$$(rest))$(newline)\
@@ -491,7 +491,7 @@ MLLVM_FLAGS := $$(strip $$(MLLVM_FLAGS))$(newline)\
 CFLAGS := $$(call spc-unmask,$$(CFLAGS))\
 )
 ```
-- Condition: as long as `glob-match` returns a match of `-mllvm ` in `CFLAGS`
+- Condition: as long as `glob-match` returns a match of `-mllvm ` in `CFLAGS`. There is a small trick to avoid an empty match on the first `*`: we sneak a `$(space)` character in at the beginning of the string so that the match will never be empty.
 - Body (notice the quoting of the newlines - this is necessary for `$(eval)` to correctly interpret the code):
    * Extract the output of `glob-match` into a temporary variable (spaces are replaced in this output, see `glob-match`). The output is a list of three elements: all characters (`*`) up to `-mllvm `, the string `-mllvm ` itself (notice the space at the end) and all characters (`*`) following it.
    * Convert back the third element (rest of `CFLAGS` behind the first `-mllvm ` match) into a string with spaces and put it into `rest`

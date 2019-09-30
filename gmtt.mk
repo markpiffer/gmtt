@@ -1275,7 +1275,7 @@ pick = $(foreach elem,$1,$(word $(elem),$2))
 ## The same can be achieved, if we use a function as where clause:
 ## - `ends-in-oo = $(call str-match,$1,%oo)`
 ## - `$(call select,3 1 2 3,$(test-tbl),$$(call ends-in-oo,$$1))` --> `baz foo bar baz baf foo bar baf`
-select = $(call -select,$1,$(strip $2),$3)
+select = $(strip $(call -select,$1,$(strip $2),$3))
 -select = $(call --select,$(wordlist 2,2147483647,$2),$(firstword $2),$(call add,$(firstword $2),1),$1,$3)
 --select = $(if $1,$(if $(call exec,$5,$(call list2param,$(wordlist 1,$2,$1))), $(call pick,$4,$1))$(call --select,$(wordlist $3,2147483647,$1),$2,$3,$4,$5))
 
@@ -1287,7 +1287,7 @@ select = $(call -select,$1,$(strip $2),$3)
 # $3 = "where-clause", function of $4 parameters returning true (non-null) or false (empty string)
 # $4 = a function which processes a list containing the selection from $3 on each iteration of the select
 # returns: a list of columns (selection in $2) from the rows in table $1 where condition $3 is non-null
-map-select = $(call -map-select,$1,$(strip $2),$3,$4)
+map-select = $(strip $(call -map-select,$1,$(strip $2),$3,$4))
 -map-select = $(call --map-select,$(wordlist 2,2147483647,$2),$(firstword $2),$(call add,$(firstword $2),1),$1,$3,$4)
 --map-select = $(if $1,$(if $(call exec,$5,$(call list2param,$(wordlist 1,$2,$1))), $(call exec,$6,$(call list2param,$(call pick,$4,$1))))$(call --map-select,$(wordlist $3,2147483647,$1),$2,$3,$4,$5,$6))
 

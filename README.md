@@ -114,7 +114,7 @@ are not.
 #### $(call lstrip,_string_,_prefix_)
  Remove a _prefix_ from the given _string_. If the prefix doesn't exist, the
  string is unchanged.
- - `$(call lstrip,0x,0xABCD)` --> `ABCD`
+ - `$(call lstrip,0xABCD,0x)` --> `ABCD`
 
 #### $(call str-eq,_string1_,_string2_)
  Compare two strings on equality. Strings are allowed to have blanks.

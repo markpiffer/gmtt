@@ -224,7 +224,7 @@ lpad = $(call implode,$(wordlist $(words _ $(call explode,$([alnum]),$1)),$2,$(c
 ###### $(call lstrip,_string_,_prefix_)
 ## Remove a _prefix_ from the given _string_. If the prefix doesn't exist, the
 ## string is unchanged.
-## - `$(call lstrip,0x,0xABCD)` --> `ABCD`
+## - `$(call lstrip,0xABCD,0x)` --> `ABCD`
 lstrip = $(patsubst $2%,%,$1)
 
 #----------------------------------------------------------------------

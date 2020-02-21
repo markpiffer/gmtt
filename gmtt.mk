@@ -1404,6 +1404,21 @@ collect-files-uniq = $(-gmtt-dbg-args)$(if $1,$(call -collect-files-uniq,$(wordl
 ##          -   third  `
 clr-comments =  $(subst $(-never-matching),$(newline),$(subst $(-spacereplace),$(space),$(patsubst $(hash)%,,$(subst $(hash),$(space)$(hash),$(subst $(newline),$(space)$(-never-matching),$(subst $(space),$(-spacereplace),$1))))))     
 
+# Kill "many" (1-15 currently) repetitive substrings from a string where the substring is lead by an anchor string
+# i.e. substring="ab", anchor="c", string="ababcababab" --> "ababc"
+# $1 - original string
+# $2 - anchor string
+# $3 - substring
+kill-many-anchored-rept = $(subst $2$3,$2,$(subst $2$3$3,$2,$(subst $2$3$3$3,$2,$(subst $2$3$3$3$3,$2,$(subst $2$3$3$3$3$3,$2,$(subst $2$3$3$3$3$3$3,$2,$(subst $2$3$3$3$3$3$3$3,$2,$1)))))))
+
+# Kill repetitive substrings from a string where the substring is lead by an anchor string
+# i.e. substring="ab", anchor="c", string="ababcababab" --> "ababc"
+# $1 - original string
+# $2 - anchor string
+# $3 - substring
+kill-anchored-rept = $(call -kill-rept,$1,$(call kill-many-rept,$1,$2,$3),$2,$3)
+-kill-anchored-rept = $(info <$1|$2|$3|$4>)$(if $(call str-eq,$1,$2),$1,$(call -kill-rept,$2,$(call kill-many-rept,$2,$3,$4),$3,$4))
+
 #----------------------------------------------------------------------
 #$(call -gmtt-test,$$(call f,x),y)
 -gmtt-test = $(if $(call -compare-result,$(call exec,$1),$2),$(info Ok: $1 = $2),$(info Test failed: $1 = $(call exec,$1), should be: $2))

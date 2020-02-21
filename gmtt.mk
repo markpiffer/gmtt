@@ -1385,10 +1385,24 @@ search-above=$(firstword $(call search-up,$1,$2,$(wildcard .)))
 ## of this file are ignored (i.e. not returned).
 ## Example: `$(call collect-files-uniq,dir1/*.c dir2/*.c dir2/foo.h dir1/*.h dir2/*.h)`
 ## This returns all files ending in `.c` from `dir1` and also those from `dir2` which didn't appear
-## in earlier. Moreover, `dir2/foo.h` (if it exists) takes presecedence over a possible `dir1/foo.h`.
+## in earlier. Moreover, `dir2/foo.h` (if it exists) takes precedence over a possible `dir1/foo.h`.
 collect-files-uniq = $(-gmtt-dbg-args)$(if $1,$(call -collect-files-uniq,$(wordlist 2,2147483647,$1),$2,$3,$(filter-out $3,$(wildcard $(firstword $1)))),$2)
 -collect-files-uniq = $(-gmtt-dbg-args)$(call collect-files-uniq,$1,$2 $4,$3 $(addprefix %/,$(notdir $4)))
 
+#----------------------------------------------------------------------
+###### $(call clr-comments,_lines-with-hash-comments_)
+## Return the given string cleared from line comments '#'
+## The string may contain spaces and newlines, these are returned untouched.
+## Example: -`config.txt:`
+##          -`first #comment`
+##          -`   # second comment`
+##          -`  third  # comment`
+##          -
+##          -`cfg-file = $(call clr-comments,$(file < config.txt))`
+## Output:  -`first `
+##          -`    `
+##          -   third  `
+clr-comments =  $(subst $(-never-matching),$(newline),$(subst $(-spacereplace),$(space),$(patsubst $(hash)%,,$(subst $(hash),$(space)$(hash),$(subst $(newline),$(space)$(-never-matching),$(subst $(space),$(-spacereplace),$1))))))     
 
 #----------------------------------------------------------------------
 #$(call -gmtt-test,$$(call f,x),y)

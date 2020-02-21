@@ -469,6 +469,22 @@ Functionally identical to `$(firstword )`. Return the head (first element) of a 
 #### $(call tail,_list_)
 Return the second and subsequent elements of a list as a new list.
 
+#### $(call clr-comments,_lines-with-hash-comments_)
+Return the given string cleared from line comments '#'.
+The string may contain spaces and newlines, these are returned untouched.
+Example: 
+- `config.txt:`
+- `first #comment`
+- `   # second comment`
+- `  third  # comment`
+-
+- `cfg-file = $(call clr-comments,$(file < config.txt))`
+
+Output:
+- `first `
+- `    `
+- `  third  `
+
 
 #### $(call while,_quoted-condition_,_quoted-code_[,_quoted-exit-statements_])
 Execute a while loop of _quoted-code_ as long as _condition_ is true (not the empty string).

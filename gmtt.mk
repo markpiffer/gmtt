@@ -528,7 +528,7 @@ up-to = $(if $(findstring $1,$(firstword $2)),,$(strip $(subst $(-separator), ,$
 ## it is never a real element), i.e. `$(call index-of,foo,$(-never-matching) foo bar baz)` will give index 1.
 ## Examples:
 ## - `$(call index-of,foo,foo bar baz)` -> `0`
-index-of = $(if $(findstring $1,$2),$(words $(call up-to,$1,$2)))
+index-of = $(if $(filter $1,$2),$(words $(call up-to,$1,$2)))
 
 #----------------------------------------------------------------------
 ###### $(call up-from,_word_,_list_)

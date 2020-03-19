@@ -34,6 +34,7 @@ equal := =#
 lparen := (#
 rparen := )#
 semicolon := ;#
+tabulator := $(strip)	$(strip)#
 
 ###### `Character classes`
 ## The following make variable carry their character class (as list):
@@ -178,6 +179,15 @@ $(eval -match-chars := $(-match-chars-q))
 ## Create a list with exactly _number-of-repetitions_ copies of a _string_.
 ## - `$(call n-list,foo,3)` --> `foo foo foo`
 n-list = $(if $(word $2,$1),$(wordlist 1,$2,$1),$(call n-list,$1 $1,$2))
+
+#----------------------------------------------------------------------
+###### $(call dec-list,_number-of-elements_)
+## Create a list of decimal numbers, starting at 0 up to _number-of-elements_-1.
+## Numbers receive leading 0's for a uniform length.
+dec-list = $(wordlist 1,$1,$(call -dec-list,$(subst .,,$(subst $(space)-,,$(call rev-list,$(wordlist 1,$(words $(call -xpld-10,$1)),$(call join,- . - . - . - . - ,$(call rev-list,$(call -xpld-10,$1)))))))))
+-dec-list = $(call --dec-list,00 $(wordlist 1,$(firstword $1), 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99),$(wordlist 2,10,$1))
+--dec-list = $(foreach j,$1,$(addprefix $(j),$(call ---dec-list,,$2)))
+---dec-list = $(if $(wordlist 2,128,$2),$(foreach i,00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99,$(call ---dec-list,$1$(i),$(wordlist 2,10,$2))),$(foreach i,00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99,$1$(i)))
 
 #----------------------------------------------------------------------
 ###### $(call binary-inc,_binary-literal_)
@@ -466,12 +476,14 @@ get-sufx-range = $(if $(filter %$(-separator)$2,$(firstword $1)),$(call -get-suf
 ## - `$(call uniq-sufx,The quick brown fox,111)` --> `The¤111 quick¤1000 brown¤1001 fox¤1010`
 uniq-sufx = $(if $1,$(firstword $1)$(-separator)$2 $(call uniq-sufx,$(wordlist 2,2147483647,$1),$(call binary-inc,$2)))
 
+uniq-sufx10 = $(join $1,$(addprefix $(-separator),$(call dec-list,$(words $1))))
+
 #----------------------------------------------------------------------
 ###### $(call sort-all,_list_)
 ## Sort a list without dropping duplicates. Built-in `$(sort)` will drop them which
 ## is sometimes not what you want. _Note_: list elements must not contain ¤ (Character 164)
 ## as this is character is used internally for processing.
-sort-all = $(foreach i,$(sort $(call uniq-sufx,$1,0)),$(firstword $(subst $(-separator), ,$(i))))
+sort-all = $(foreach i,$(sort $(call uniq-sufx10,$1,0)),$(firstword $(subst $(-separator), ,$(i))))
 
 #----------------------------------------------------------------------
 ###### $(call rev-list,_list_)
@@ -504,6 +516,7 @@ list2param = $(subst $(space),$(comma),$(strip $1))
 ## (see list2params function) which is given as the call parameters _$1_,_$2_,etc.
 ## to the function expression. 
 exec = $(eval -exec=$1)$(eval -exec:=$$(call -exec,$(call list2param,$(subst $(hash),$$(hash),$2))))$(-exec)
+exec1 = $(eval -exec1=$1)$(eval -exec1:=$$(call -exec1,$(subst $(hash),$$(hash),$2)))$(-exec1)
 lambda2 = $(eval -lambda2=$2)$(eval -lambda2:=$$(call -lambda2$(subst $(space),,$(wordlist 1,$1,$(lambda-param)))))$(-lambda2)
 
 lambda-param := ,$$3 ,$$4  ,$$5 ,$$6 ,$$7 ,$$8 ,$$9 ,$$10 ,$$11 ,$$12 ,$$13 ,$$14 ,$$15 ,$$16 ,$$17 ,$$18 ,$$19 ,$$20 ,$$21 ,$$22 ,$$23 ,$$24 ,$$25 ,$$26 ,$$27 ,$$28 ,$$29 ,$$30 ,$$31 ,$$32 ,$$33
@@ -517,7 +530,7 @@ lambda-param := ,$$3 ,$$4  ,$$5 ,$$6 ,$$7 ,$$8 ,$$9 ,$$10 ,$$11 ,$$12 ,$$13 ,$$1
 ## Examples:
 ## - `$(call up-to,baz,foo bar baz)` -> `foo bar`
 ## - `$(call up-to,foo,foo bar baz)` -> ` ` (empty list)
-up-to = $(if $(findstring $1,$(firstword $2)),,$(strip $(subst $(-separator), ,$(firstword $(subst $(-separator)$1$(-separator), ,$(subst $(space),$(-separator), $2 ))))))
+up-to = $(if $(filter $1,$(firstword $2)),,$(strip $(subst $(-separator), ,$(firstword $(subst $(-separator)$(firstword $(filter $1,$2))$(-separator), ,$(subst $(space),$(-separator), $2 ))))))
 
 #----------------------------------------------------------------------
 ###### $(call index-of,_word_,_list_)
@@ -528,7 +541,7 @@ up-to = $(if $(findstring $1,$(firstword $2)),,$(strip $(subst $(-separator), ,$
 ## it is never a real element), i.e. `$(call index-of,foo,$(-never-matching) foo bar baz)` will give index 1.
 ## Examples:
 ## - `$(call index-of,foo,foo bar baz)` -> `0`
-index-of = $(if $(findstring $1,$2),$(words $(call up-to,$1,$2)))
+index-of = $(if $(filter $1,$2),$(words $(call up-to,$1,$2)))
 
 #----------------------------------------------------------------------
 ###### $(call up-from,_word_,_list_)
@@ -1386,8 +1399,8 @@ search-above=$(firstword $(call search-up,$1,$2,$(wildcard .)))
 ## Example: `$(call collect-files-uniq,dir1/*.c dir2/*.c dir2/foo.h dir1/*.h dir2/*.h)`
 ## This returns all files ending in `.c` from `dir1` and also those from `dir2` which didn't appear
 ## in earlier. Moreover, `dir2/foo.h` (if it exists) takes precedence over a possible `dir1/foo.h`.
-collect-files-uniq = $(-gmtt-dbg-args)$(if $1,$(call -collect-files-uniq,$(wordlist 2,2147483647,$1),$2,$3,$(filter-out $3,$(wildcard $(firstword $1)))),$2)
--collect-files-uniq = $(-gmtt-dbg-args)$(call collect-files-uniq,$1,$2 $4,$3 $(addprefix %/,$(notdir $4)))
+collect-files-uniq = $(if $1,$(call -collect-files-uniq,$(wordlist 2,2147483647,$1),$2,$3,$(filter-out $3,$(wildcard $(firstword $1)))),$2)
+-collect-files-uniq = $(call collect-files-uniq,$1,$2 $4,$3 $(addprefix %/,$(notdir $4)))
 
 #----------------------------------------------------------------------
 ###### $(call clr-comments,_lines-with-hash-comments_)
@@ -1416,8 +1429,8 @@ kill-many-anchored-rept = $(subst $2$3,$2,$(subst $2$3$3,$2,$(subst $2$3$3$3,$2,
 # $1 - original string
 # $2 - anchor string
 # $3 - substring
-kill-anchored-rept = $(call -kill-rept,$1,$(call kill-many-rept,$1,$2,$3),$2,$3)
--kill-anchored-rept = $(info <$1|$2|$3|$4>)$(if $(call str-eq,$1,$2),$1,$(call -kill-rept,$2,$(call kill-many-rept,$2,$3,$4),$3,$4))
+kill-anchored-rept = $(call -kill-anchored-rept,$1,$(call kill-many-anchored-rept,$1,$2,$3),$2,$3)
+-kill-anchored-rept = $(if $(call str-eq,$1,$2),$1,$(call -kill-anchored-rept,$2,$(call kill-many-anchored-rept,$2,$3,$4),$3,$4))
 
 #----------------------------------------------------------------------
 #$(call -gmtt-test,$$(call f,x),y)

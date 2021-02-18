@@ -461,6 +461,59 @@ Examples:
 - `$(call join-tbl,1 one two,2 first 1st second 2nd third 3rd)` --> `3 one first 1st two second 2nd one third 3rd`
 - `$(call join-tbl,2 one apple two oranges,1 1st 2nd 3rd,/*NIL*/)` --> `3 one apple 1st two oranges 2nd /*NIL*/ /*NIL*/ 3rd`
 
+### File System Functions
+
+#### $(call wildcard-rec,_list-of-globs_)
+ _"wildcard recursive"_ is an extension to the built in `wildcard`
+ function.  It turns a list of glob expressions into the list of all
+ files (for expressions not ending in `/`) or directories
+ (expressions ending in `/`) which are reachable in the file system
+ by these globs. The given paths obey usual glob syntax (`*`, `?`
+ etc.) with a special extension: there is one `%` or `**` allowed in
+ the path expression which starts a recursive search of the file tree
+ at this position of the glob. To explain this: the usual glob syntax
+ `*` expresses just one directory level down, e.g. in `project/*/foo`
+ each file "foo" in any of the subdirectories of `project` is
+ found. There is no way to find a "foo" file deeper down the
+ hierarchy - you would need to know how many levels deep the file is
+ located e.g. `project/*/*/*/foo`. While this syntax is absolutely
+ allowed, the expression `project/**/foo` addresses the former and
+ all other existing directory levels in the tree no matter how
+ deep. More complex patterns are also allowed:
+
+  - `project**/foo` will select all first level directories which start with `project`: also directory `project001` will be considered
+  - `project/**foo` will select all files in the tree under `project` which end in `foo`
+  - `**.h` will select all C header files in the current file tree
+
+ Example: for the following directory structure:
+ 
+    .(working directory)
+    |
+    +---barfoo
+         |   foo.c
+         |
+         +---bar
+         |       bar
+         |
+         +---foo
+         |       bar.foo
+         |       foo.txt
+         |
+         \---foobar
+
+the exemplary globs on the left will create the outputs to the right:
+
+    **.c --> ./barfoo/foo.c 
+    foo*/ -->
+    bar*/ --> barfoo/
+    **/foo*/ --> ./barfoo/foo/ ./barfoo/foobar/
+    **/foo* --> ./barfoo/foo.c ./barfoo/foo/foo.txt
+    **/*foo* --> ./barfoo/foo.c ./barfoo/foo/bar.foo ./barfoo/foo/foo.txt
+    **/bar --> ./barfoo/bar/bar
+    **/bar/ --> ./barfoo/bar/
+
+
+
 ### Miscellaneous Functions
 
 #### $(call head,_list_)

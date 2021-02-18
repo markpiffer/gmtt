@@ -1391,6 +1391,102 @@ search-up=$(if $(wildcard $3/$1),$(wildcard $3/$1))$(if $(wildcard $3/$2),$(call
 search-above=$(firstword $(call search-up,$1,$2,$(wildcard .)))
 
 #----------------------------------------------------------------------
+##### $(call wildcard-rec,_list-of-globs_)
+## _"wildcard recursive"_ is an extension to the built in `wildcard`
+## function.  It turns a list of glob expressions into the list of all
+## files (for expressions not ending in `/`) or directories
+## (expressions ending in `/`) which are reachable in the file system
+## by these globs. The given paths obey usual glob syntax (`*`, `?`
+## etc.) with a special extension: there is one `%` or `**` allowed in
+## the path expression which starts a recursive search of the file tree
+## at this position of the glob. To explain this: the usual glob syntax
+## `*` expresses just one directory level down, e.g. in `project/*/foo`
+## each file "foo" in any of the subdirectories of `project` is
+## found. There is no way to find a "foo" file deeper down the
+## hierarchy - you would need to know how many levels deep the file is
+## located e.g. `project/*/*/*/foo`. While this syntax is absolutely
+## allowed, the expression `project/**/foo` addresses the former and
+## all other existing directory levels in the tree no matter how
+## deep. More complex patterns are also allowed:
+##
+##  - `project**/foo` will select all first level diroctories
+## which start with 'project'
+##  - `project/**foo` will select all files in the tree under `project` which end in `foo`
+##  - `**.h` will select all C header files in the current file tree
+##
+## Example: for a directory structure as the following:
+##
+##--barfoo
+##    |   foo.c
+##    |
+##    +---bar
+##    |       bar
+##    |
+##    +---foo
+##    |       bar.foo
+##    |       foo.txt
+##    |
+##    \---foobar
+##
+## the globs of the following list:
+##
+## GLOBS := **.c foo*/ bar*/ **/foo*/  **/foo* **/*foo* **/bar **/bar/
+## $(foreach p,$(GLOBS),$(info $(p) --> $(call wildcard-rec,$(p))))
+##
+## if executed from the parent directory of `barfoo` will create these outputs:
+##
+## **.c --> ./barfoo/foo.c 
+## foo*/ -->
+## bar*/ --> barfoo/
+## **/foo*/ --> ./barfoo/foo/ ./barfoo/foobar/
+## **/foo* --> ./barfoo/foo.c ./barfoo/foo/foo.txt
+## **/*foo* --> ./barfoo/foo.c ./barfoo/foo/bar.foo ./barfoo/foo/foo.txt
+## **/bar --> ./barfoo/bar/bar
+## **/bar/ --> ./barfoo/bar/
+##
+wildcard-rec =  $(foreach pth,$(subst **,%,$1),$(if $(findstring %,$(pth)),$(if $(filter \%%,$(pth)),$(call -wldcard-rec-$(if $(filter %/,$(pth)),dir,file),./,$(subst %,,$(pth))),$(call -wldcard-rec-$(if $(filter %/,$(pth)),dir,file),$(firstword $(subst %,$(space),$(pth))),$(word 2,$(subst %,$(space),$(pth))))),$(wildcard $(pth))))
+
+# For a recursive file search ('**'), the following logic is
+# applied. A given glob with a prefix 'a' not ending in '/' and a
+# postfix 'b' not beginning with '/' the 'arbitrary expansion'
+# operator '**' yields 4 possible combinations:
+#
+# glob:    a**/b         a/**/b         a/**b         a**b
+#
+# In the first level of the search (no recursed directory entry) this
+# effects the following globs (spaces only for readability/parameter
+# distribution in the function):
+#
+# files:   a * /b        a  /b          a  /*b        a   *b
+#
+# The first recursion walks down in the directory tree like this:
+#
+# recurse: a */.          a/ */.         a/ */.         a */.
+#
+# The second and subsequent globs are these ('p' denotes the directory
+# path which was found during the traversal starting with the first
+# recursion, it has the form 'a[subdirectories]/')
+#
+# files:   p /b          p /b            p /*b          p /*b
+# recurse: p*/.           p*/.           p*/.          p*/.
+
+# $1 - first part of search glob (before '%')
+# $2 - second part of search glob (after '%')
+-wldcard-rec-file = $(call --wldcard-rec-file,$(wildcard $(call --wldcard-rec,$(subst %,*,$(subst /%/,/,$1%$2)),$1,$(if $(filter /%,$2),$2,/*$2))))
+--wldcard-rec-file =  $(sort $(filter-out $(patsubst %/.,%,$(wildcard $(addsuffix /.,$1))),$1))
+
+# Same logic for directories:
+
+# $1 - first part of search glob (before '%')
+# $2 - second part of search glob (after '%')
+-wldcard-rec-dir = $(sort $(patsubst %.,%,$(wildcard $(call --wldcard-rec,$(if $(filter %/,$1)$(filter-out /,$2),$(subst %,*,$(subst /%/,/,$1%$2.))),$1,$(if $(filter /%,$2),$2.,/*$2.)))))
+
+# $1 - glob for the files or directories of this directory
+# $2 - search position in file tree, init'd with head part of path glob (before %)
+# $3 - tail part of path glob (after %)
+--wldcard-rec = $1 $(foreach dir,$(wildcard $2*/.),$(call --wldcard-rec,$(patsubst %/.,%,$(dir))$3,$(patsubst %.,%,$(dir)),$3))
+
+#----------------------------------------------------------------------
 ###### $(call collect-files-uniq,_list-of-globs_)
 ## Return a list with the full path + name of all files which match one of the glob
 ## expressions. If files of the same name exist under different

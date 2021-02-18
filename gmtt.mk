@@ -1391,7 +1391,7 @@ search-up=$(if $(wildcard $3/$1),$(wildcard $3/$1))$(if $(wildcard $3/$2),$(call
 search-above=$(firstword $(call search-up,$1,$2,$(wildcard .)))
 
 #----------------------------------------------------------------------
-##### $(call wildcard-rec,_list-of-globs_)
+###### $(call wildcard-rec,_list-of-globs_)
 ## _"wildcard recursive"_ is an extension to the built in `wildcard`
 ## function.  It turns a list of glob expressions into the list of all
 ## files (for expressions not ending in `/`) or directories
@@ -1409,40 +1409,36 @@ search-above=$(firstword $(call search-up,$1,$2,$(wildcard .)))
 ## all other existing directory levels in the tree no matter how
 ## deep. More complex patterns are also allowed:
 ##
-##  - `project**/foo` will select all first level diroctories
-## which start with 'project'
+##  - `project**/foo` will select all first level directories which start with `project`: also directory `project001` will be considered
 ##  - `project/**foo` will select all files in the tree under `project` which end in `foo`
 ##  - `**.h` will select all C header files in the current file tree
 ##
-## Example: for a directory structure as the following:
-##
-##--barfoo
-##    |   foo.c
+## Example: for the following directory structure:
+## 
+##    .(working directory)
 ##    |
-##    +---bar
-##    |       bar
-##    |
-##    +---foo
-##    |       bar.foo
-##    |       foo.txt
-##    |
-##    \---foobar
+##    +---barfoo
+##         |   foo.c
+##         |
+##         +---bar
+##         |       bar
+##         |
+##         +---foo
+##         |       bar.foo
+##         |       foo.txt
+##         |
+##         \---foobar
 ##
-## the globs of the following list:
+## the exemplary globs on the left will create the outputs to the right:
 ##
-## GLOBS := **.c foo*/ bar*/ **/foo*/  **/foo* **/*foo* **/bar **/bar/
-## $(foreach p,$(GLOBS),$(info $(p) --> $(call wildcard-rec,$(p))))
-##
-## if executed from the parent directory of `barfoo` will create these outputs:
-##
-## **.c --> ./barfoo/foo.c 
-## foo*/ -->
-## bar*/ --> barfoo/
-## **/foo*/ --> ./barfoo/foo/ ./barfoo/foobar/
-## **/foo* --> ./barfoo/foo.c ./barfoo/foo/foo.txt
-## **/*foo* --> ./barfoo/foo.c ./barfoo/foo/bar.foo ./barfoo/foo/foo.txt
-## **/bar --> ./barfoo/bar/bar
-## **/bar/ --> ./barfoo/bar/
+##    **.c --> ./barfoo/foo.c 
+##    foo*/ -->
+##    bar*/ --> barfoo/
+##    **/foo*/ --> ./barfoo/foo/ ./barfoo/foobar/
+##    **/foo* --> ./barfoo/foo.c ./barfoo/foo/foo.txt
+##    **/*foo* --> ./barfoo/foo.c ./barfoo/foo/bar.foo ./barfoo/foo/foo.txt
+##    **/bar --> ./barfoo/bar/bar
+##    **/bar/ --> ./barfoo/bar/
 ##
 wildcard-rec =  $(foreach pth,$(subst **,%,$1),$(if $(findstring %,$(pth)),$(if $(filter \%%,$(pth)),$(call -wldcard-rec-$(if $(filter %/,$(pth)),dir,file),./,$(subst %,,$(pth))),$(call -wldcard-rec-$(if $(filter %/,$(pth)),dir,file),$(firstword $(subst %,$(space),$(pth))),$(word 2,$(subst %,$(space),$(pth))))),$(wildcard $(pth))))
 

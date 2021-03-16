@@ -508,6 +508,24 @@ shorten = $(call rev-list,$(wordlist $(call decimal-inc,$(or $3,0)),2147483647,$
 list2param = $(subst $(space),$(comma),$(strip $1))
 
 #----------------------------------------------------------------------
+###### $(call quote-params,[_param1_,[_param2_,[_param3_,[_param4_,[_param5_,[_param6_,[_param7_,[_param8_,[_param9_]]]]]]]]])
+## Convert all given parameters into a string with the format of the
+## parameter list, i.e. a string with the verbatim parameters
+## separated by commas. Use this function as a macro to channel an
+## unknown number of function parameters into a string.
+##
+## Examples:
+##`test = $(info <$(quote-params)>)`
+##`$(call test,1,2,3,4,5,6,7,8,9)` -> `<1,2,3,4,5,6,7,8,9>` 
+##`$(call test,,2,3,4,5,6,7,8,9)` -> `<,2,3,4,5,6,7,8,9>`  
+##`$(call test,1)` -> `<1>`   
+##`$(call test,1,2,3,4,5,6,,,9)` -> `<1,2,3,4,5,6,,,9>`  
+##`$(call test,,,,,,,,,9)` -> `<,,,,,,,,9>`  
+##`$(call test,,,,,,,,,)` -> `<,,,,,,,,>`   
+##`$(call test,)` -> `<>`                  
+quote-params = $(if $(findstring simple,$(flavor 1)),$1)$(if $(findstring simple,$(flavor 2)$(flavor 3)$(flavor 4)$(flavor 5)$(flavor 6)$(flavor 7)$(flavor 8)$(flavor 9)),$(comma)$(if $(findstring simple,$(flavor 2)),$2)$(if $(findstring simple,$(flavor 3)$(flavor 4)$(flavor 5)$(flavor 6)$(flavor 7)$(flavor 8)$(flavor 9)),$(comma)$(if $(findstring simple,$(flavor 3)),$3)$(if $(findstring simple,$(flavor 4)$(flavor 5)$(flavor 6)$(flavor 7)$(flavor 8)$(flavor 9)),$(comma)$(if $(findstring simple,$(flavor 4)),$4)$(if $(findstring simple,$(flavor 5)$(flavor 6)$(flavor 7)$(flavor 8)$(flavor 9)),$(comma)$(if $(findstring simple,$(flavor 5)),$5)$(if $(findstring simple,$(flavor 6)$(flavor 7)$(flavor 8)$(flavor 9)),$(comma)$(if $(findstring simple,$(flavor 6)),$6)$(if $(findstring simple,$(flavor 7)$(flavor 8)$(flavor 9)),$(comma)$(if $(findstring simple,$(flavor 7)),$7)$(if $(findstring simple,$(flavor 8)$(flavor 9)),$(comma)$(if $(findstring simple,$(flavor 8)),$8)$(if $(findstring simple,$(flavor 9)),$(comma)$9))))))))
+
+#----------------------------------------------------------------------
 ###### $(call exec,_quoted-func_,_params_)
 ## Evaluate the _quoted-func_ code in place, using the _params_ as parameter list.
 ## _quoted-func_ is any GNUmake 'code' which could also appear on the rhs of a variable

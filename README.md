@@ -306,6 +306,22 @@ are not.
  there is no comma at the start and end of the list.
  - `$(call list2param,The   quick brown   fox)` --> `The,quick,brown,fox`
 
+#### $(call quote-params,[_param1_,[_param2_,[_param3_,[_param4_,[_param5_,[_param6_,[_param7_,[_param8_,[_param9_]]]]]]]]])
+ Convert all given parameters into a string with the format of the
+ parameter list, i.e. a string with the verbatim parameters
+ separated by commas. Use this function as a macro to channel an
+ unknown number of function parameters into a string.
+
+ Examples:
+- `test = $(info <$(quote-params)>)`
+- `$(call test,1,2,3,4,5,6,7,8,9)` -> `<1,2,3,4,5,6,7,8,9>` 
+- `$(call test,,2,3,4,5,6,7,8,9)` -> `<,2,3,4,5,6,7,8,9>`  
+- `$(call test,1)` -> `<1>`   
+- `$(call test,1,2,3,4,5,6,,,9)` -> `<1,2,3,4,5,6,,,9>`  
+- `$(call test,,,,,,,,,9)` -> `<,,,,,,,,9>`  
+- `$(call test,,,,,,,,,)` -> `<,,,,,,,,>`   
+- `$(call test,)` -> `<>`                  
+
 #### $(call exec,_quoted-func_,_params_)
  Evaluate the _quoted-func_ code in place, using the _params_ as parameter list.
  _quoted-func_ is any GNUmake 'code' which could also appear on the rhs of a variable

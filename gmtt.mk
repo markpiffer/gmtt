@@ -1458,7 +1458,7 @@ search-above=$(firstword $(call search-up,$1,$2,$(wildcard .)))
 ##    **/bar --> ./barfoo/bar/bar
 ##    **/bar/ --> ./barfoo/bar/
 ##
-wildcard-rec =  $(foreach pth,$(subst **,%,$1),$(if $(findstring %,$(pth)),$(if $(filter \%%,$(pth)),$(call -wldcard-rec-$(if $(filter %/,$(pth)),dir,file),./,$(subst %,,$(pth))),$(call -wldcard-rec-$(if $(filter %/,$(pth)),dir,file),$(firstword $(subst %,$(space),$(pth))),$(word 2,$(subst %,$(space),$(pth))))),$(wildcard $(pth))))
+wildcard-rec =  $(foreach pth,$(subst **,%,$1),$(if $(findstring %,$(pth)),$(if $(filter \%%,$(pth)),$(call -wldcard-rec-$(if $(filter %/,$(pth)),dir,file),./,$(subst %,,$(pth))),$(call -wldcard-rec-$(if $(filter %/,$(pth)),dir,file),$(firstword $(subst %,$(space),$(pth))),$(word 2,$(subst %,$(space),$(pth))))),$(if $(filter %/,$(pth)),$(patsubst %.,%,$(wildcard $(pth).)),$(filter-out $(patsubst %/.,%,$(wildcard $(pth)/.)),$(wildcard $(pth))))))
 
 # For a recursive file search ('**'), the following logic is
 # applied. A given glob with a prefix 'a' not ending in '/' and a

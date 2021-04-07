@@ -520,14 +520,13 @@ Examples:
 the exemplary globs on the left will create the outputs to the right:
 
     **.c --> ./barfoo/foo.c 
-    foo*/ -->
+    foo*/ --> foo/
     bar*/ --> barfoo/
-    **/foo*/ --> ./barfoo/foo/ ./barfoo/foobar/
+    **/foo*/ --> ./barfoo/foo/ ./barfoo/foobar/ ./foo/
     **/foo* --> ./barfoo/foo.c ./barfoo/foo/foo.txt
     **/*foo* --> ./barfoo/foo.c ./barfoo/foo/bar.foo ./barfoo/foo/foo.txt
     **/bar --> ./barfoo/bar/bar
     **/bar/ --> ./barfoo/bar/
-
 
 
 ### Miscellaneous Functions

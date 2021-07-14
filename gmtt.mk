@@ -247,6 +247,17 @@ lstrip = $(patsubst $2%,%,$1)
 str-eq = $(if $(subst x$1,,x$2),,t)
 
 #----------------------------------------------------------------------
+###### $(call str-ne,_string1_,_string2_)
+## Compare two strings on inequality. The obvious inverse to
+## `str-eq`. Strings are allowed to have blanks.  Return empty if
+## string $1 and $2 are identical, a non-empty string otherwise.
+##
+## - `$(call str-eq,yes,no)` --> `t` (empty string)
+## - `$(call str-eq,yes ,yes)` --> `t` (empty string)
+## - `$(call str-eq,yes ,yes )`  --> ` `
+str-ne = $(if $(subst x$1,,x$2),t)
+
+#----------------------------------------------------------------------
 ###### $(call str-le,_string1_,_string2_)
 ## Compare two strings lexically for _string1_ less-or-equal _string2_.
 ## Lexical ordering means that 'aa' < 'aaa' < 'aab' < 'ab'. The empty string

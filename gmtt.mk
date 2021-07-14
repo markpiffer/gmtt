@@ -252,9 +252,9 @@ str-eq = $(if $(subst x$1,,x$2),,t)
 ## `str-eq`. Strings are allowed to have blanks.  Return empty if
 ## string $1 and $2 are identical, a non-empty string otherwise.
 ##
-## - `$(call str-eq,yes,no)` --> `t` (empty string)
-## - `$(call str-eq,yes ,yes)` --> `t` (empty string)
-## - `$(call str-eq,yes ,yes )`  --> ` `
+## - `$(call str-eq,yes,no)` --> `t`
+## - `$(call str-eq,yes ,yes)` --> `t`
+## - `$(call str-eq,yes ,yes )`  --> ` ` (empty string)
 str-ne = $(if $(subst x$1,,x$2),t)
 
 #----------------------------------------------------------------------

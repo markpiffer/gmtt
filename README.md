@@ -513,6 +513,10 @@ Examples:
  
     .(working directory)
     |
+    +---foo
+    |    |
+    |    +-
+    |
     +---barfoo
          |   foo.c
          |

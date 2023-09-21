@@ -573,13 +573,13 @@ when leaving the while loop, even when the loop body was never executed.
 ```
 CFLAGS := -DFOO -DBAR -mllvm llvmflag1 -mllvm llvmflag2
 $(call while, $$(call glob-match,$(space)$$(CFLAGS),*-mllvm *),\
-   tmp := $$(call glob-match,$(space)$$(CFLAGS),*-mllvm *)$(newline)\
-   rest := $$(call spc-unmask,$$(word 3,$$(tmp)))$(newline)\
-   llvm_flg := $$(firstword $$(rest))$(newline)\
-   CFLAGS := $$(firstword $$(tmp)) $$(call tail,$$(rest))$(newline)\
-   $$(info [[[$$(tmp) --- $$(rest) --- $$(CFLAGS) ]]])$(newline)\
+   tmp := $$(call glob-match,$(space)$$(CFLAGS),*-mllvm *)   $(newline)\
+   rest := $$(call spc-unmask,$$(word 3,$$(tmp)))            $(newline)\
+   llvm_flg := $$(firstword $$(rest))                        $(newline)\
+   CFLAGS := $$(firstword $$(tmp)) $$(call tail,$$(rest))    $(newline)\
+   $$(info [[[$$(tmp) --- $$(rest) --- $$(CFLAGS) ]]])       $(newline)\
    MLLVM_FLAGS+=$$(llvm_flg),\
-MLLVM_FLAGS := $$(strip $$(MLLVM_FLAGS))$(newline)\
+MLLVM_FLAGS := $$(strip $$(MLLVM_FLAGS))                     $(newline)\
 CFLAGS := $$(call spc-unmask,$$(CFLAGS))\
 )
 ```

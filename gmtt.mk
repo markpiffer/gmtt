@@ -12,7 +12,11 @@
 #
 # Internal functions begin (mostly) with a '-'. They may change without notice.
 #
-# Copyright (c) 2017 Mark Piffer
+# To generate the test script from the comments in this file, execute
+#   
+# echo include gmtt/gmtt.mk > t.mk; sed '/^#\{1,2\} %/!d ; s/#\{1,2\} % *`\(.*\)`.*`\(.*\)`.*$/(call -gmtt-test,\1,\2)/ ; s/\$/$$/g ; s/^/$/' gmtt/gmtt.mk >> t.mk; make -f t.mk
+#
+# Copyright (c) 2017-2024 Mark Piffer
 #
 
 -gmtt-dbg-args = $(if $(-gmtt-dbg-info),$(info $0($(if $1$2$3$4$5$6,<$1>$(if $2$3$4$5$6,<$2>$(if $3$4$5$6,<$3>$(if $4$5$6,<$4>$(if $5$6,<$5>$(if $6,<$6>)))))))))
@@ -72,7 +76,7 @@ tabulator := $(strip)	$(strip)#
 ## it is to be used in `$(eval)` expressions which would
 ## otherwise have uncontrollable side effects due to make
 ## interpreting the characters.
-all-chars-q := $$(space) ! " $$(hash) $ % & ' $$(lparen) $$(rparen) * + , - . / 0 1 2 3 4 5 6 7 8 9 $$(colon) ; < $$(equal) > ? @ A B C D E F G H I J K L M N O P Q R S T U V W X Y Z [ \ ] ^ _ ` a b c d e f g h i j k l m n o p q r s t u v w x y z { | } ~ 
+all-chars-q := $$(space) ! " $$(hash) $ % & ' $$(lparen) $$(rparen) * + $$(comma) - . / 0 1 2 3 4 5 6 7 8 9 $$(colon) ; < $$(equal) > ? @ A B C D E F G H I J K L M N O P Q R S T U V W X Y Z [ \ ] ^ _ ` a b c d e f g h i j k l m n o p q r s t u v w x y z { | } ~ 
 # " <- closing quotation mark to end string parsing in some editors :D
 
 #----------------------------------------------------------------------
@@ -96,8 +100,19 @@ $(eval all-chars := $(all-chars-q))
 ###### $(call explode,_stringlist_,_string_)
 ## Insert a blank after every occurrence of the strings from _stringlist_ in _string_.
 ## This function serves mainly to convert a string into a list.
-## - `$(call explode,0 1 2 3 4 5 6 7 8 9,0x1337c0de)` --> `0 x1 3 3 7 c0 de`
-explode = $(if $1,$(subst $(firstword $1),$(firstword $1) ,$(call explode,$(wordlist 2,2147483647,$1),$2)),$2)
+## % `$(call explode,0 1 2 3 4 5 6 7 8 9,0x1337c0de)` --> `0 x1 3 3 7 c0 de`
+explode = $(call -explode-$(if $(word 11,$1),10,$(words $1)),$(wordlist 11,2147483647,$1),$2,$1)
+-explode-0 = $2
+-explode-1 = $(subst $(word 1,$3),$(word 1,$3) ,$2)
+-explode-2 = $(subst $(word 1,$3),$(word 1,$3) ,$(subst $(word 2,$3),$(word 2,$3) ,$2))
+-explode-3 = $(subst $(word 1,$3),$(word 1,$3) ,$(subst $(word 2,$3),$(word 2,$3) ,$(subst $(word 3,$3),$(word 3,$3) ,$2)))
+-explode-4 = $(subst $(word 1,$3),$(word 1,$3) ,$(subst $(word 2,$3),$(word 2,$3) ,$(subst $(word 3,$3),$(word 3,$3) ,$(subst $(word 4,$3),$(word 4,$3) ,$2))))
+-explode-5 = $(subst $(word 1,$3),$(word 1,$3) ,$(subst $(word 2,$3),$(word 2,$3) ,$(subst $(word 3,$3),$(word 3,$3) ,$(subst $(word 4,$3),$(word 4,$3) ,$(subst $(word 5,$3),$(word 5,$3) ,$2)))))
+-explode-6 = $(subst $(word 1,$3),$(word 1,$3) ,$(subst $(word 2,$3),$(word 2,$3) ,$(subst $(word 3,$3),$(word 3,$3) ,$(subst $(word 4,$3),$(word 4,$3) ,$(subst $(word 5,$3),$(word 5,$3) ,$(subst $(word 6,$3),$(word 6,$3) ,$2))))))
+-explode-7 = $(subst $(word 1,$3),$(word 1,$3) ,$(subst $(word 2,$3),$(word 2,$3) ,$(subst $(word 3,$3),$(word 3,$3) ,$(subst $(word 4,$3),$(word 4,$3) ,$(subst $(word 5,$3),$(word 5,$3) ,$(subst $(word 6,$3),$(word 6,$3) ,$(subst $(word 7,$3),$(word 7,$3) ,$2)))))))
+-explode-8 = $(subst $(word 1,$3),$(word 1,$3) ,$(subst $(word 2,$3),$(word 2,$3) ,$(subst $(word 3,$3),$(word 3,$3) ,$(subst $(word 4,$3),$(word 4,$3) ,$(subst $(word 5,$3),$(word 5,$3) ,$(subst $(word 6,$3),$(word 6,$3) ,$(subst $(word 7,$3),$(word 7,$3) ,$(subst $(word 8,$3),$(word 8,$3) ,$2))))))))
+-explode-9 = $(subst $(word 1,$3),$(word 1,$3) ,$(subst $(word 2,$3),$(word 2,$3) ,$(subst $(word 3,$3),$(word 3,$3) ,$(subst $(word 4,$3),$(word 4,$3) ,$(subst $(word 5,$3),$(word 5,$3) ,$(subst $(word 6,$3),$(word 6,$3) ,$(subst $(word 7,$3),$(word 7,$3) ,$(subst $(word 8,$3),$(word 8,$3) ,$(subst $(word 9,$3),$(word 9,$3) ,$2)))))))))
+-explode-10 = $(call -explode-$(if $(word 11,$1),10,$(words $1)),$(wordlist 11,2147483647,$1),$(subst $(word 1,$3),$(word 1,$3) ,$(subst $(word 2,$3),$(word 2,$3) ,$(subst $(word 3,$3),$(word 3,$3) ,$(subst $(word 4,$3),$(word 4,$3) ,$(subst $(word 5,$3),$(word 5,$3) ,$(subst $(word 6,$3),$(word 6,$3) ,$(subst $(word 7,$3),$(word 7,$3) ,$(subst $(word 8,$3),$(word 8,$3) ,$(subst $(word 9,$3),$(word 9,$3) ,$(subst $(word 10,$3),$(word 10,$3) ,$2)))))))))),$1)
 
 #----------------------------------------------------------------------
 # Decompose a number into a list. The same as $(call explode,$([0-9]),string)
@@ -110,7 +125,7 @@ explode = $(if $1,$(subst $(firstword $1),$(firstword $1) ,$(call explode,$(word
 ###### $(call implode,_string-with-spaces_)
 ## Remove all spaces from the given string. Note that make is mostly unaware of escape
 ## characters and therefore takes all spaces verbatim.
-## - `$(call implode,some\ awkward\ Windows\ path)` --> `some\awkward\Windows\path`
+## % `$(call implode,some\ awkward\ Windows\ path)` --> `some\awkward\Windows\path`
 implode = $(subst $(space),,$(strip $1))
 
 ###### Predefined character classes for chop-str et al
@@ -177,7 +192,9 @@ $(eval -match-chars := $(-match-chars-q))
 #----------------------------------------------------------------------
 ###### $(call n-list,_string_,_number-of-repetitions_)
 ## Create a list with exactly _number-of-repetitions_ copies of a _string_.
-## - `$(call n-list,foo,3)` --> `foo foo foo`
+## % `$(call n-list,foo,13)` --> `foo foo foo foo foo foo foo foo foo foo foo foo foo`
+#n-list = $(call -n-list,$1,$(call rev-list,$(call -xpld-10,$2)))
+#-n-list = $(foreach i,$(wordlist 1,$(or $(firstword $2),0),1 2 3 4 5 6 7 8 9),$1) $(if $(word 2,$2),$(call -n-list,$1 $1 $1 $1 $1 $1 $1 $1 $1 $1,$(wordlist 2,32,$2)))
 n-list = $(if $(word $2,$1),$(wordlist 1,$2,$1),$(call n-list,$1 $1,$2))
 
 #----------------------------------------------------------------------
@@ -185,7 +202,7 @@ n-list = $(if $(word $2,$1),$(wordlist 1,$2,$1),$(call n-list,$1 $1,$2))
 ## Create a list of decimal numbers, starting at 0 up to _number-of-elements_-1.
 ## Numbers receive leading 0's for a uniform length.
 dec-list = $(wordlist 1,$1,$(call -dec-list,$(wordlist 1,$(words $(call -xpld-10,$1)),$(subst .,,$(subst $(space)-,,$(call rev-list,$(call join,- . - . - . - . - .,$(call rev-list,$(call -xpld-10,$1)))))))))
--dec-list = $(-gmtt-dbg-args) $(call --dec-list,00 $(wordlist 1,$(firstword $1), 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99),$(wordlist 2,10,$1))
+-dec-list = $(call --dec-list,00 $(wordlist 1,$(firstword $1), 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99),$(wordlist 2,10,$1))
 --dec-list = $(foreach j,$1,$(addprefix $(j),$(call ---dec-list,,$2)))
 ---dec-list = $(if $(wordlist 2,128,$2),$(foreach i,00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99,$(call ---dec-list,$1$(i),$(wordlist 2,10,$2))),$(foreach i,00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99,$1$(i)))
 
@@ -193,21 +210,21 @@ dec-list = $(wordlist 1,$1,$(call -dec-list,$(wordlist 1,$(words $(call -xpld-10
 ###### $(call binary-inc,_binary-literal_)
 ## Count the _binary-literal_ up by 1, yielding the following binary literal.
 ## Leading zeros are preserved.
-## - `$(call binary-inc,010011)` -> `010100`
+## % `$(call binary-inc,010011)` -> `010100`
 binary-inc = $(if $1,$(if $(patsubst %1,,$1),$(patsubst %0,%1,$1),$(call binary-inc,$(patsubst %1,%,$1))0),1)
 
 #----------------------------------------------------------------------
 ###### $(call decimal-inc,_decimal-literal_)
 ## Count the _decimal-literal_ up by 1, yielding the following decimal literal.
 ## Leading zeros are preserved.
-## - `$(call decimal-inc,0099)` -> `0100`
+## % `$(call decimal-inc,0099)` -> `0100`
 decimal-inc = $(if $1,$(if $(patsubst %9,,$1),$(if $(patsubst %8,,$1),$(if $(patsubst %7,,$1),$(if $(patsubst %6,,$1),$(if $(patsubst %5,,$1),$(if $(patsubst %4,,$1),$(if $(patsubst %3,,$1),$(if $(patsubst %2,,$1),$(if $(patsubst %1,,$1),$(patsubst %0,%1,$1),$(patsubst %1,%2,$1)),$(patsubst %2,%3,$1)),$(patsubst %3,%4,$1)),$(patsubst %4,%5,$1)),$(patsubst %5,%6,$1)),$(patsubst %6,%7,$1)),$(patsubst %7,%8,$1)),$(patsubst %8,%9,$1)),$(call decimal-inc,$(patsubst %9,%,$1))0),1)
 
 #----------------------------------------------------------------------
 ###### $(call symgen)
 ## Generate a different string at each call. The last generated symbol is
 ## accessible via `$(last-symgen)`.
-## - `$(call symgen)` --> `sym0`
+## % `$(call symgen)` --> `sym0`
 symgen = $(eval last-symgen:=sym$(call binary-inc,$(subst sym,,$(last-symgen))))$(last-symgen)
 
 #----------------------------------------------------------------------
@@ -217,8 +234,8 @@ symgen = $(eval last-symgen:=sym$(call binary-inc,$(subst sym,,$(last-symgen))))
 ## and defaults to 1 if not given.
 ##
 ## Example:
-## - `$(call interval,5,5)` --> `5 6 7 8 9`
-## - `$(call interval,2,3,100)` --> `2 102 202`
+## % `$(call interval,5,5)` --> `5 6 7 8 9`
+## % `$(call interval,2,3,100)` --> `2 102 202`
 interval = $(eval -interval := $1)$(foreach i,$(call n-list,_,$2),$(-interval)$(eval -interval := $$(call add,$$(-interval),$(or $3,1))))
 
 #----------------------------------------------------------------------
@@ -226,24 +243,24 @@ interval = $(eval -interval := $1)$(foreach i,$(call n-list,_,$2),$(-interval)$(
 ## Left-pad an alphanumeric string with the given character up to the given length.
 ## If the original string is longer than _final-width_, nothing is padded.
 ## Expample:
-## - `$(call lpad,123,7,0)` --> `0000123`
-## - `$(call lpad,123,7,-)` --> `----123`
+## % `$(call lpad,123,7,0)` --> `0000123`
+## % `$(call lpad,123,7,-)` --> `----123`
 lpad = $(call implode,$(wordlist $(words _ $(call explode,$([alnum]),$1)),$2,$(call n-list,$3,$2)))$1
 
 #----------------------------------------------------------------------
 ###### $(call lstrip,_string_,_prefix_)
 ## Remove a _prefix_ from the given _string_. If the prefix doesn't exist, the
 ## string is unchanged.
-## - `$(call lstrip,0xABCD,0x)` --> `ABCD`
+## % `$(call lstrip,0xABCD,0x)` --> `ABCD`
 lstrip = $(patsubst $2%,%,$1)
 
 #----------------------------------------------------------------------
 ###### $(call str-eq,_string1_,_string2_)
 ## Compare two strings on equality. Strings are allowed to have blanks.
 ## Return non-empty if string $1 and $2 are identical, empty string otherwise.
-## - `$(call str-eq,yes,no)` --> ` ` (empty string)
-## - `$(call str-eq,yes ,yes)` --> ` ` (empty string)
-## - `$(call str-eq,yes ,yes )`  --> `t`
+## % `$(call str-eq,yes,no)` --> `` (empty string)
+## % `$(call str-eq,yes ,yes)` --> `` (empty string)
+## % `$(call str-eq,yes ,yes )`  --> `t`
 str-eq = $(if $(subst x$1,,x$2),,t)
 
 #----------------------------------------------------------------------
@@ -252,9 +269,9 @@ str-eq = $(if $(subst x$1,,x$2),,t)
 ## `str-eq`. Strings are allowed to have blanks.  Return empty if
 ## string $1 and $2 are identical, a non-empty string otherwise.
 ##
-## - `$(call str-eq,yes,no)` --> `t`
-## - `$(call str-eq,yes ,yes)` --> `t`
-## - `$(call str-eq,yes ,yes )`  --> ` ` (empty string)
+## % `$(call str-ne,yes,no)` --> `t`
+## % `$(call str-ne,yes ,yes)` --> `t`
+## % `$(call str-ne,yes ,yes )`  --> `` (empty string)
 str-ne = $(if $(subst x$1,,x$2),t)
 
 #----------------------------------------------------------------------
@@ -267,14 +284,14 @@ str-ne = $(if $(subst x$1,,x$2),t)
 ## smaller than downcase characters but greater than upcase. In short: you
 ## should know what you are doing if you have spaces inside your strings.
 ## Examples:
-## - `$(call str-le,aaa,ab))` --> `t` 			     
-## - `$(call str-le,   ab aa,aa))` --> ` `	(empty string)	     
-## - `$(call str-le,aa,aa))` --> `t`			     
-## - `$(call str-le,aa,a))` --> ` `	(empty string)		     
-## - `$(call str-le,a,))` --> ` ` (empty string)			     
-## - `$(call str-le,,a))` --> `t`			     
-## - `$(call str-le,MacGyver John,Mac Gyver John))` --> `t`
-## - `$(call str-le,macgyver john,mac gyver john))` --> ` ` (empty string)
+## % `$(call str-le,aaa,ab)` --> `t` 			     
+## % `$(call str-le,   ab aa,aa)` --> ``	(empty string)	     
+## % `$(call str-le,aa,aa)` --> `t`			     
+## % `$(call str-le,aa,a)` --> ``	(empty string)		     
+## % `$(call str-le,a,)` --> `` (empty string)			     
+## % `$(call str-le,,a)` --> `t`			     
+## % `$(call str-le,MacGyver John,Mac Gyver John)` --> `t`
+## % `$(call str-le,macgyver john,mac gyver john)` --> `` (empty string)
 str-le = $(if $(filter _$(subst $(space),_,$(strip $1)),$(firstword $(sort _$(subst $(space),_,$(strip $1)) _$(subst $(space),_,$(strip $2))))),t,$(if $1$2,,t))
 
 #----------------------------------------------------------------------
@@ -287,14 +304,14 @@ str-le = $(if $(filter _$(subst $(space),_,$(strip $1)),$(firstword $(sort _$(su
 ## smaller than downcase characters but greater than upcase. In short: you
 ## should know what you are doing if you have spaces inside your strings.
 ## Examples:
-## - `$(call str-ge,aaa,ab))` --> ` ` (empty string) 			     
-## - `$(call str-ge,   ab aa,aa))` --> `t`
-## - `$(call str-ge,aa,aa))` --> `t`			     
-## - `$(call str-ge,aa,a))` --> `t`
-## - `$(call str-ge,a,))` --> `t`			     
-## - `$(call str-ge,,a))` --> ` ` (empty string)			     
-## - `$(call str-ge,MacGyver John,Mac Gyver John))` --> ` ` (empty string)
-## - `$(call str-ge,macgyver john,mac gyver john))` --> `t`
+## % `$(call str-ge,aaa,ab)` --> `` (empty string) 			     
+## % `$(call str-ge,   ab aa,aa)` --> `t`
+## % `$(call str-ge,aa,aa)` --> `t`			     
+## % `$(call str-ge,aa,a)` --> `t`
+## % `$(call str-ge,a,)` --> `t`			     
+## % `$(call str-ge,,a)` --> `` (empty string)			     
+## % `$(call str-ge,MacGyver John,Mac Gyver John)` --> `` (empty string)
+## % `$(call str-ge,macgyver john,mac gyver john)` --> `t`
 str-ge = $(if $(filter _$(subst $(space),_,$(strip $2)),$(firstword $(sort _$(subst $(space),_,$(strip $1)) _$(subst $(space),_,$(strip $2))))),t,$(if $1$2,,t))
 
 
@@ -311,12 +328,12 @@ str-ge = $(if $(filter _$(subst $(space),_,$(strip $2)),$(firstword $(sort _$(su
 ## can appear in both of the strings.
 ## Return t if _string1_ and _string2_ match where the first % is taken as
 ## wildcard, return empty string otherwise. 
-## - `$(call str-match,Mickey%Mouse,Mickey Mouse))` --> `t`
-## - `$(call str-match,Mickey%,MickeyMouse))` --> `t`
-## - `$(call str-match,Mickey%,))` --> ` ` (empty string)
-## - `$(call str-match,Mickey %ouse,Mickey Mouse))` --> `t`
-## - `$(call str-match,MickeyMouse,MickeyMouse%))` --> `t`
-## - `$(call str-match,,%))` --> `t`
+## % `$(call str-match,Mickey%Mouse,Mickey Mouse)` --> `t`
+## % `$(call str-match,Mickey%,MickeyMouse)` --> `t`
+## % `$(call str-match,Mickey%,)` --> `` (empty string)
+## % `$(call str-match,Mickey %ouse,Mickey Mouse)` --> `t`
+## % `$(call str-match,MickeyMouse,MickeyMouse%)` --> `t`
+## % `$(call str-match,,%)` --> `t`
 str-match = $(if $(and $(patsubst _$(subst $(space),$(-separator),$(strip $1)),,_$(subst $(space),$(-separator),$(strip $2))),$(patsubst _$(subst $(space),$(-separator),$(strip $2)),,_$(subst $(space),$(-separator),$(strip $1)))),,t)
 
 #----------------------------------------------------------------------
@@ -371,7 +388,7 @@ $(foreach c,$(-match-chars-q),$(eval -glob-match-$(c) = $$(if $$1,$$(if $$(finds
 ##    - `[]abc]` - first position is the only way to match a `]`
 ##    - `[-abc]` - first or last position is the only way to match a `-`
 ##    - `[!a-z]` - `!` inverts the match, i.e. everything but `a`..`z`
-## If no match occurred, the  ` ` (empty string) is returned.
+## If no match occurred, the  `` (empty string) is returned.
 ## If the string matches, it is returned with all parts corresponding to one of the above
 ## wildcards separated by space.
 ## As GNUmake treats everything which is different from the empty string
@@ -384,8 +401,8 @@ $(foreach c,$(-match-chars-q),$(eval -glob-match-$(c) = $$(if $$1,$$(if $$(finds
 ## to allow access to the elements with a constant index, in case you are dissecting
 ## a string.
 ## Examples:
-## - `$(call glob-match,Linux 2.6.32-431.el6.i686,Linux 2.6.*.i686)` --> `Linux§2.6. 32-431.el6 .i686`
-## - `$(call glob-match,down/to/unknown/dir/file.txt,down/*/*/*/*.txt)` --> `down/ to / unknown / dir / file .txt`
+## % `$(call glob-match,Linux 2.6.32-431.el6.i686,Linux 2.6.*.i686)` --> `Linux§2.6. 32-431.el6 .i686`
+## % `$(call glob-match,down/to/unknown/dir/file.txt,down/*/*/*/*.txt)` --> `down/ to / unknown / dir / file .txt`
 glob-match = $(call -glob-match,$(subst $(rparen),$(-rparenreplace),$(subst $(lparen),$(-lparenreplace),$(call explode,$(-match-chars),$(subst $(space),$(-spacereplace),$1)))),$(subst $(rparen),$(-rparenreplace),$(subst $(lparen),$(-lparenreplace),$(call explode,$(-match-chars),$(subst $(space),$(-spacereplace),$2)))))
 -glob-match = $(call -glob-match-$(firstword $2),$1,$(wordlist 2,2147483647,$2))
 
@@ -418,9 +435,9 @@ glob-match = $(call -glob-match,$(subst $(rparen),$(-rparenreplace),$(subst $(lp
 ## internal character by simply applying `$(call
 ## spc-unmask,_string-chunk-from-result_)`.
 ## Examples:
-## - `$(call chop-str,Linux 4.13.0-17-generic,A $(-alpha-as-str),1 $(-digit-as-str),. .-+?)` --> ` AÂ¤Linux 1Â¤4 .Â¤. 1Â¤13 .Â¤. 1Â¤0 .Â¤- 1Â¤17 .Â¤- AÂ¤generic`
-## - `$(call chop-str,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-as-str),num $(-digit-as-str),sep :)` --> ` alphaÂ¤Thu alphaÂ¤Nov numÂ¤30 numÂ¤18 sepÂ¤: numÂ¤43 sepÂ¤: numÂ¤22 alphaÂ¤CET numÂ¤2017`
-## - `$(call chop-str-spc,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-as-str),num $(-digit-as-str),sep :)` --> ` alphaÂ¤ThuÂ§NovÂ§ numÂ¤30 alphaÂ¤Â§ numÂ¤18 sepÂ¤: numÂ¤43 sepÂ¤: numÂ¤22 alphaÂ¤Â§CETÂ§ numÂ¤2017`
+## % `$(call chop-str,Linux 4.13.0-17-generic,A $(-alpha-as-str),1 $(-digit-as-str),. .-+?)` --> ` A¤Linux 1¤4 .¤. 1¤13 .¤. 1¤0 .¤- 1¤17 .¤- A¤generic`
+## % `$(call chop-str,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-as-str),num $(-digit-as-str),sep :)` --> ` alpha¤Thu alpha¤Nov num¤30 num¤18 sep¤: num¤43 sep¤: num¤22 alpha¤CET num¤2017`
+## % `$(call chop-str-spc,Thu Nov 30 18:43:22 CET 2017,alpha $(-alpha-as-str),num $(-digit-as-str),sep :)` --> ` alpha¤Thu§Nov§ num¤30 alpha¤§ num¤18 sep¤: num¤43 sep¤: num¤22 alpha¤§CET§ num¤2017`
 chop-str = $(call -chop-str,$(call explode,$(all-chars) $(-spacereplace) $(-separator) $(-never-matching),$(subst $(space),$(-never-matching),$1)),,$2,$3,$4,$5)
 chop-str-spc = $(call chop-str,$(call spc-mask,$1),$2$(-spacereplace),$3,$4,$5)
 
@@ -441,7 +458,7 @@ chop-str-spc = $(call chop-str,$(call spc-mask,$1),$2$(-spacereplace),$3,$4,$5)
 ## Clear the prefixes from a separator list. A separator list
 ## is a make list with a prefix name prepended to each list
 ## element and the internal character `$(-separator)` between them
-## e.g. `alphaÂ¤Linux  numÂ¤4  dotÂ¤.  numÂ¤2`. 
+## e.g. `alpha¤Linux  num¤4  dot¤.  num¤2`. 
 drop-prfx = $(filter-out %$(-separator),$(subst $(-separator),$(-separator) ,$1))
 
 ###### $(call drop-sufx,_separator-list_)
@@ -449,7 +466,7 @@ drop-prfx = $(filter-out %$(-separator),$(subst $(-separator),$(-separator) ,$1)
 ## What remains is a list of prefixes only . A separator list
 ## is a make list with a prefix name prepended to each list
 ## element and the internal character `$(-separator)` between them
-## e.g. `alphaÂ¤Linux  numÂ¤4  dotÂ¤.  numÂ¤2`. 
+## e.g. `alpha¤Linux  num¤4  dot¤.  num¤2`. 
 drop-sufx = $(filter-out $(-separator)%,$(subst $(-separator), $(-separator),$1))
 
 ###### $(call filter-prfx,_separator-list_,_prefix-1_ [_prefix-2_.._prefix-n_])
@@ -483,8 +500,8 @@ get-sufx-range = $(if $(filter %$(-separator)$2,$(firstword $1)),$(call -get-suf
 ###### $(call uniq-sufx,_list_,_binary-literal_)
 ## Add a ¤ (Character 164) and a unique binary number to all elements of the _list_.
 ## The _binary-literal_ must be present and can be any combination of `0`'s and `1`'s.
-## - `$(call uniq-sufx,The quick brown fox,0)` --> `The¤0 quick¤1 brown¤10 fox¤11`
-## - `$(call uniq-sufx,The quick brown fox,111)` --> `The¤111 quick¤1000 brown¤1001 fox¤1010`
+## % `$(call uniq-sufx,The quick brown fox,0)` --> `The¤0 quick¤1 brown¤10 fox¤11`
+## % `$(call uniq-sufx,The quick brown fox,111)` --> `The¤111 quick¤1000 brown¤1001 fox¤1010`
 uniq-sufx = $(if $1,$(firstword $1)$(-separator)$2 $(call uniq-sufx,$(wordlist 2,2147483647,$1),$(call binary-inc,$2)))
 
 uniq-sufx10 = $(join $1,$(addprefix $(-separator),$(call dec-list,$(words $1))))
@@ -499,7 +516,7 @@ sort-all = $(foreach i,$(sort $(call uniq-sufx10,$1,0)),$(firstword $(subst $(-s
 #----------------------------------------------------------------------
 ###### $(call rev-list,_list_)
 ## Reverse the order of the elements of a list.
-## - `$(call rev-list,The quick brown fox)` --> `fox brown quick The`
+## % `$(call rev-list,The quick brown fox)` --> `fox brown quick The`
 rev-list = $(strip $(call -rev-list,$1,1073741824 1073741825 536870912 536870913 268435456 268435457 134217728 134217729 67108864 67108865 33554432 33554433 16777216 16777217 8388608 8388609 4194304 4194305 2097152 2097153 1048576 1048577 524288 524289 262144 262145 131072 131073 65536 65537 32768 32769 16384 16385 8192 8193 4096 4097 2048 2049 1024 1025 512 513 256 257 128 129 64 65 32 33 16 17))
 -rev-list = $(if $1,$(if $2,$(call -rev-list,$(wordlist $(word 2,$2),21819281782,$1),$(wordlist 3,64,$2)) $(call -rev-list,$(wordlist 1,$(firstword $2),$1),$(wordlist 3,64,$2)),$(word 16,$1) $(word 15,$1) $(word 14,$1) $(word 13,$1) $(word 12,$1) $(word 11,$1) $(word 10,$1) $(word 9,$1) $(word 8,$1) $(word 7,$1) $(word 6,$1) $(word 5,$1) $(word 4,$1) $(word 3,$1) $(word 2,$1) $(firstword $1)))
 
@@ -515,7 +532,7 @@ shorten = $(call rev-list,$(wordlist $(call decimal-inc,$(or $3,0)),2147483647,$
 ## Convert the given _list_ to a string where each list element is
 ## separated by a comma. Multiple spaces get reduced to one comma and
 ## there is no comma at the start and end of the list.
-## - `$(call list2param,The   quick brown   fox)` --> `The,quick,brown,fox`
+## % `$(call list2param,The   quick brown   fox)` --> `The,quick,brown,fox`
 list2param = $(subst $(space),$(comma),$(strip $1))
 
 #----------------------------------------------------------------------
@@ -557,8 +574,8 @@ lambda-param := ,$$3 ,$$4  ,$$5 ,$$6 ,$$7 ,$$8 ,$$9 ,$$10 ,$$11 ,$$12 ,$$13 ,$$1
 ## Return first part of _list_ up to but excluding the first occurrence of _word_.
 ## If _word_ is not in _list_, the whole list is returned.
 ## Examples:
-## - `$(call up-to,baz,foo bar baz)` -> `foo bar`
-## - `$(call up-to,foo,foo bar baz)` -> ` ` (empty list)
+## % `$(call up-to,baz,foo bar baz)` -> `foo bar`
+## % `$(call up-to,foo,foo bar baz)` -> `` (empty list)
 up-to = $(if $(filter $1,$(firstword $2)),,$(strip $(subst $(-separator), ,$(firstword $(subst $(-separator)$(firstword $(filter $1,$2))$(-separator), ,$(subst $(space),$(-separator), $2 ))))))
 
 #----------------------------------------------------------------------
@@ -569,7 +586,7 @@ up-to = $(if $(filter $1,$(firstword $2)),,$(strip $(subst $(-separator), ,$(fir
 ## call time with the $(-never-matching) element (or a simple underscore, if you are sure that 
 ## it is never a real element), i.e. `$(call index-of,foo,$(-never-matching) foo bar baz)` will give index 1.
 ## Examples:
-## - `$(call index-of,foo,foo bar baz)` -> `0`
+## % `$(call index-of,foo,foo bar baz)` -> `0`
 index-of = $(if $(filter $1,$2),$(words $(call up-to,$1,$2)))
 
 #----------------------------------------------------------------------
@@ -577,8 +594,8 @@ index-of = $(if $(filter $1,$2),$(words $(call up-to,$1,$2)))
 ## Return the portion of _list_ following the first occurrence of _word_.
 ## If _word_ is not in _list_, the empty string/list is returned.
 ## Examples:
-## - `$(call up-from,foo,foo bar baz)` -> `bar baz`
-## - `$(call up-from,baz,foo bar baz)` -> ` ` (empty list)
+## % `$(call up-from,foo,foo bar baz)` -> `bar baz`
+## % `$(call up-from,baz,foo bar baz)` -> `` (empty list)
 up-from = $(strip $(wordlist $(or $(call index-of,$1,$(-never-matching) $(-never-matching) $2),2147483647),2147483647,$2))
 
 
@@ -589,8 +606,8 @@ up-from = $(strip $(wordlist $(or $(call index-of,$1,$(-never-matching) $(-never
 ## If _word_ is not in _list_, the whole list is returned. This operation is 
 ## helpful in dissecting e.g. path expressions (´/´ substituted by ´ ´ or ´/ ´)
 ## Examples:
-## - `$(call down-to,baz,foo baz bar baz)` -> ` ` (empty list)
-## - `$(call down-to,foo,foo foo bar baz)` -> `bar baz`
+## % `$(call down-to,baz,foo baz bar baz)` -> `` (empty list)
+## % `$(call down-to,foo,foo foo bar baz)` -> `bar baz`
 down-to = $(call rev-list,$(call up-to,$1,$(call rev-list,$2)))
 
 #----------------------------------------------------------------------
@@ -600,8 +617,8 @@ down-to = $(call rev-list,$(call up-to,$1,$(call rev-list,$2)))
 ## If _word_ is not in _list_, the empty list is returned. This operation is 
 ## helpful in dissecting e.g. path expressions (´/´ substituted by ´ ´ or ´/ ´)
 ## Examples:
-## - `$(call down-from,baz,foo baz bar baz)` -> `foo baz bar`
-## - `$(call down-from,foo,foo bar baz)` -> ` ` (empty list)
+## % `$(call down-from,baz,foo baz bar baz)` -> `foo baz bar`
+## % `$(call down-from,foo,foo bar baz)` -> `` (empty list)
 down-from = $(call rev-list,$(call up-from,$1,$(call rev-list,$2)))
 
 #----------------------------------------------------------------------
@@ -620,7 +637,6 @@ down-from = $(call rev-list,$(call up-from,$1,$(call rev-list,$2)))
 # $2 = 2nd number as list
 -shift-merge = $(if $(word $(words $1),$2),$(join $(wordlist $(words _ $1),$(words $2),$(-all-0)) $1,$2),$(join $1,$(wordlist $(words _ $2),$(words $1),$(-all-0)) $2))
 
-
 #----------------------------------------------------------------------
 # Merge two sign-extended numbers. This function is only implemented for
 # hexadecimal numbers.
@@ -630,8 +646,6 @@ down-from = $(call rev-list,$(call up-from,$1,$(call rev-list,$2)))
 # $3 = 1st sign (- or empty)
 # $4 = 2nd sign (- or empty)
 -sgnxt-merge = $(if $(word $(words $1),$2),$(join $(wordlist $(words _ $1),$(words $2),$(-all-$(subst 0-,f,0$3))) $1,$2),$(join $1,$(wordlist $(words _ $2),$(words $1),$(-all-$(subst 0-,f,0$4))) $2))
-
-
 
 #----------------------------------------------------------------------
 # The following elisp code generates the tables for addition, subtraction
@@ -785,19 +799,15 @@ $(foreach i,$(-mulcarry16-pairs),$(eval -mc16-$(i)))
 --mul16-e = $(call -add16,$(subst $(space)_,,$(space)$(foreach i,$1,_$(-mc16-e$(i)) $(-ml16-e$(i)))))
 --mul16-f = $(call -add16,$(subst $(space)_,,$(space)$(foreach i,$1,_$(-mc16-f$(i)) $(-ml16-f$(i)))))
 
-
 # Remove all leading 0's
 # $1 = numeric literal with leading 0's
 -nrmlz = $(if $1,$(if $(patsubst 00%,,$1),$(if $(patsubst 0%,,$1),$1,$(call -nrmlz,$(patsubst 0%,%,$1))),$(call -nrmlz,$(patsubst 00%,%,$1))),0)
-
 
 # Compare two unsigned numbers (given as lists)
 # $1 = first number as list
 # $2 = second number as list
 -ucmp = $(if $(word $(words $2),$1),$(if $(word $(words $1),$2),$(call --ucmp,$(firstword $(filter-out 00 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff,$(join $1,$2)))),>),<)
 --ucmp = $(if $1,$(if $(-bw16-$1),<,>),=)
-
-
 
 # Split a numeric literal into a base id (8,10 or 16) and the digits without base indicator
 # and also strip the sign
@@ -813,15 +823,6 @@ $(foreach i,$(-mulcarry16-pairs),$(eval -mc16-$(i)))
 -fmt16 = $(if $(filter-out 0,$1),$2)0x$(call -nrmlz,$(subst $(space),,$1))
 -fmt10 = $(if $(filter-out 0,$1),$2)$(call -nrmlz,$(subst $(space),,$1))
 -fmt8 = $(if $(filter-out 0,$1),$2)0$(call -nrmlz,$(subst $(space),,$1))
-
-
-
-# <empty string> := $1 > $2
-# b := $1 < $2
-# eq := $1 = $2
--bw10- := eq
--udivcmp = $(-bw10-$(firstword $(filter-out 0 00 11 22 33 44 55 66 77 88 99,$(join $1,$2))))
-
 
 -10to10 = $1
 -8to8 = $1
@@ -882,102 +883,49 @@ $(foreach i,$(-mulcarry16-pairs),$(eval -mc16-$(i)))
 -10to89 := 1 1	 
 
 
-# Decision tree for division:
-#
-#  1 ----------------+
-# a-b                |
-#        +---------- 5 ----------------+
-#        |          a-b-4b             |
-#   +--- 3 ----+               +------ 7 -------+
-#   |  a-b-2b  |               |   a-b-4b-2b    |
-#   2          4               6                8 --------+
-# a-b-b     a-b-2b-b       a-b-4b-b        a-b-4b-2b-b    |
-#                                                         9
-#                                                    a-b-4b-2b-b-b
-
+# Return true if $1 < $2
+-div-lt = $(-bw10-$(firstword $(filter-out 00 11 22 33 44 55 66 77 88 99,$(join $1,$2)) 00))
 
 # $1 = a
 # $2 = b
-# $3 = current power of 10 of b as list of 0's
--div10-1 = $(call --div10-1$(-udivcmp),$1,$2,$3)
---div10-1 = $(call -div10-5,$(call -sub10,$(join $1,$2)),$(call --mul10-4,$2),$2,$3)
---div10-1z = 0 $(if $3,$(call -div10-1,$1,0 $2,$(wordlist 2,$(-num-limit),$3)))
---div10-1eq = 1 $3
+-div10 = $(call --div10,$(wordlist 1,$(words $2),$1),$(wordlist $(words _ $2),$(-num-limit),$1),$2,$(call --mul10-2,$2),$(call --mul10-3,$2),$(call --mul10-4,$2),$(call --mul10-5,$2),$(call --mul10-6,$2),$(call --mul10-7,$2),$(call --mul10-8,$2),$(call --mul10-9,$2))
 
+# $1 = a*  (leading digits of a of length=b)
+# $2 = a~  (trailing digits of a)
+# $3..$11 = b, 2*b, 3*b,...9*b
+--div10 = $(call ---div10,$(if $(filter-out $(words $(11)),$(words $1)),0 )$1,$2,\
+$(if $(filter-out $(words $(11)),$(words $3)),0 )$3,\
+$(if $(filter-out $(words $(11)),$(words $4)),0 )$4,\
+$(if $(filter-out $(words $(11)),$(words $5)),0 )$5,\
+$(if $(filter-out $(words $(11)),$(words $6)),0 )$6,\
+$(if $(filter-out $(words $(11)),$(words $7)),0 )$7,\
+$(if $(filter-out $(words $(11)),$(words $8)),0 )$8,\
+$(if $(filter-out $(words $(11)),$(words $9)),0 )$9,\
+$(if $(filter-out $(words $(11)),$(words $(10))),0 )$(10),$(11))
 
-# $1 = a-b
-# $2 = 4*b
-# $3 = b
-# $4 = current power of 10 of b as list of 0's
--div10-5 = $(call --div10-5$(-udivcmp),$1,$2,$3,$4)
---div10-5 = $(call -div10-7,$(call -sub10,$(join $1,$2)),$(call --mul10-2,$3),$3,$4)
---div10-5z = $(call -div10-3,$1,$(call --mul10-2,$3),$3,$4)
---div10-5eq = 5 $4
-
-# $1 = a-b
-# $2 = 2*b
-# $3 = b
-# $4 = current power of 10 of b as list of 0's
--div10-3 = $(call --div10-3$(-udivcmp),$1,$2,$3,$4)
---div10-3 = $(call -div10-4,$(call -sub10,$(join $1,$2)),$3,$3,$4)
---div10-3z = $(call -div10-2,$1,$3,$3,$4)
---div10-3eq = 3 $4
-
-# $1 = a-b
-# $2 = b
-# $3 = b
-# $4 = current power of 10 of b as list of 0's
--div10-2 = $(call --div10-2$(-udivcmp),$1,$2,$3,$4)
---div10-2 = 2 $(if $4,$(call -div10-1,$(call -sub10,$(join $1,$2)),0 $2,$(wordlist 2,$(-num-limit),$4)))
---div10-2z = 1 $(if $4,$(call -div10-1,$1,0 $3,$(wordlist 2,$(-num-limit),$4)))
---div10-2eq = 2 $4
-
-# $1 = a-b-2b
-# $2 = b
-# $3 = b
-# $4 = current power of 10 of b as list of 0's
--div10-4 = $(call --div10-4$(-udivcmp),$1,$2,$3,$4)
---div10-4 = 4 $(if $4,$(call -div10-1,$(call -sub10,$(join $1,$2)),0 $3,$(wordlist 2,$(-num-limit),$4)))
---div10-4z = 3 $(if $4,$(call -div10-1,$1,0 $3,$(wordlist 2,$(-num-limit),$4)))
---div10-4eq = 4 $4
-
-# $1 = a-b-4b
-# $2 = 2*b
-# $3 = b
-# $4 = current power of 10 of b as list of 0's
--div10-7 = $(call --div10-7$(-udivcmp),$1,$2,$3,$4)
---div10-7 = $(call -div10-8,$(call -sub10,$(join $1,$2)),$3,$3,$4)
---div10-7z = $(call -div10-6,$1,$3,$3,$4)
---div10-7eq = 7 $4
-
-
-# $1 = a-b-4b
-# $2 = b
-# $3 = b
-# $4 = current power of 10 of b as list of 0's
--div10-6 = $(call --div10-6$(-udivcmp),$1,$2,$3,$4)
---div10-6 = 6 $(if $4,$(call -div10-1,$(call -sub10,$(join $1,$2)),0 $2,$(wordlist 2,$(-num-limit),$4)))
---div10-6z = 5 $(if $4,$(call -div10-1,$1,0 $2,$(wordlist 2,$(-num-limit),$4)))
---div10-6eq = 6 $4
-
-# $1 = a-b-4b-2b
-# $2 = b
-# $3 = b
-# $4 = current power of 10 of b as list of 0's
--div10-8 = $(call --div10-8$(-udivcmp),$1,$2,$3,$4)
---div10-8 = $(call -div10-9,$(call -sub10,$(join $1,$2)),$3,$3,$4)
---div10-8z = 7 $(if $4,$(call -div10-1,$1,0 $2,$(wordlist 2,$(-num-limit),$4)))
---div10-8eq = 8 $4
-
-# $1 = a-b-4b-2b-b
-# $2 = b
-# $3 = b
-# $4 = current power of 10 of b as list of 0's
--div10-9 = $(call --div10-9$(-udivcmp),$1,$2,$3,$4)
---div10-9 = 9 $(if $4,$(call -div10-1,$(call -sub10,$(join $1,$2)),0 $2,$(wordlist 2,$(-num-limit),$4)))
---div10-9z = 8 $(if $4,$(call -div10-1,$1,0 $2,$(wordlist 2,$(-num-limit),$4)))
---div10-9eq = 9 $4
-
+# All numbers (except a~) are of exact same length to be processable with sub-functions.
+# $1 = a*  (leading digits of a of length=b)
+# $2 = a~  (trailing digits of a)
+# $3..$11 = b, 2*b, 3*b,...9*b
+---div10 = $(if $(call -div-lt,$1,$(11)),\
+$(if $(call -div-lt,$1,$(10)),\
+$(if $(call -div-lt,$1,$9),\
+$(if $(call -div-lt,$1,$8),\
+$(if $(call -div-lt,$1,$7),\
+$(if $(call -div-lt,$1,$6),\
+$(if $(call -div-lt,$1,$5),\
+$(if $(call -div-lt,$1,$4),\
+$(if $(call -div-lt,$1,$3),\
+0 $(if $2,$(call ---div10,$(wordlist 2,$(-num-limit),$1) $(firstword $2),$(wordlist 2,$(-num-limit),$2),$3,$4,$5,$6,$7,$8,$9,$(10),$(11))),\
+1 $(if $2,$(call ---div10,$(wordlist 2,$(-num-limit),$(call -sub10,$(join $1,$3))) $(firstword $2),$(wordlist 2,$(-num-limit),$2),$3,$4,$5,$6,$7,$8,$9,$(10),$(11)))),\
+2 $(if $2,$(call ---div10,$(wordlist 2,$(-num-limit),$(call -sub10,$(join $1,$4))) $(firstword $2),$(wordlist 2,$(-num-limit),$2),$3,$4,$5,$6,$7,$8,$9,$(10),$(11)))),\
+3 $(if $2,$(call ---div10,$(wordlist 2,$(-num-limit),$(call -sub10,$(join $1,$5))) $(firstword $2),$(wordlist 2,$(-num-limit),$2),$3,$4,$5,$6,$7,$8,$9,$(10),$(11)))),\
+4 $(if $2,$(call ---div10,$(wordlist 2,$(-num-limit),$(call -sub10,$(join $1,$6))) $(firstword $2),$(wordlist 2,$(-num-limit),$2),$3,$4,$5,$6,$7,$8,$9,$(10),$(11)))),\
+5 $(if $2,$(call ---div10,$(wordlist 2,$(-num-limit),$(call -sub10,$(join $1,$7))) $(firstword $2),$(wordlist 2,$(-num-limit),$2),$3,$4,$5,$6,$7,$8,$9,$(10),$(11)))),\
+6 $(if $2,$(call ---div10,$(wordlist 2,$(-num-limit),$(call -sub10,$(join $1,$8))) $(firstword $2),$(wordlist 2,$(-num-limit),$2),$3,$4,$5,$6,$7,$8,$9,$(10),$(11)))),\
+7 $(if $2,$(call ---div10,$(wordlist 2,$(-num-limit),$(call -sub10,$(join $1,$9))) $(firstword $2),$(wordlist 2,$(-num-limit),$2),$3,$4,$5,$6,$7,$8,$9,$(10),$(11)))),\
+8 $(if $2,$(call ---div10,$(wordlist 2,$(-num-limit),$(call -sub10,$(join $1,$(10)))) $(firstword $2),$(wordlist 2,$(-num-limit),$2),$3,$4,$5,$6,$7,$8,$9,$(10),$(11)))),\
+9 $(if $2,$(call ---div10,$(wordlist 2,$(-num-limit),$(call -sub10,$(join $1,$(11)))) $(firstword $2),$(wordlist 2,$(-num-limit),$2),$3,$4,$5,$6,$7,$8,$9,$(10),$(11))))
 
 
 # Create a two's-complement representation of the given number
@@ -985,6 +933,15 @@ $(foreach i,$(-mulcarry16-pairs),$(eval -mc16-$(i)))
 -twoscompl16 = $(wordlist 2,$(-num-limit),$(call -sub16,$(join 1 $(patsubst %,0,$1),0 $1)))
 -onescompl16 = $(call -sub16,$(join $(patsubst %,f,$1),$1))
 
+###### $(call log2,_num_)
+## Calculate the 2-logarithm for number _num_.
+## Examples:
+## % `$(call log2,0)` -> `0`
+## % `$(call log2,1)` -> `1`
+## % `$(call log2,2)` -> `1`
+## % `$(call log2,5)` -> `3`
+## % `$(call log2,7)` -> `3`
+## % `$(call log2,0x80)` -> `7`
 log2 = $(call -log2,$(call -analyze,$1))
 -log2 = $(call --log2,$(call -$(firstword $1)to16,$(call -xpld-$(firstword $1),$(call -nrmlz,$(lastword $1)))))
 --log2 = $(words $(--log2$(firstword $1)) $(foreach i,$(wordlist 2,$(-num-limit),$1),_ _ _ _))
@@ -1039,16 +996,43 @@ $(foreach i,$(-and-pairs),$(eval --band$(i)))
 $(foreach i,$(-or-pairs),$(eval --bor$(i)))
 -xor-pairs :=00:=0 01:=1 02:=2 03:=3 04:=4 05:=5 06:=6 07:=7 08:=8 09:=9 0a:=a 0b:=b 0c:=c 0d:=d 0e:=e 0f:=f 10:=1 11:=0 12:=3 13:=2 14:=5 15:=4 16:=7 17:=6 18:=9 19:=8 1a:=b 1b:=a 1c:=d 1d:=c 1e:=f 1f:=e 20:=2 21:=3 22:=0 23:=1 24:=6 25:=7 26:=4 27:=5 28:=a 29:=b 2a:=8 2b:=9 2c:=e 2d:=f 2e:=c 2f:=d 30:=3 31:=2 32:=1 33:=0 34:=7 35:=6 36:=5 37:=4 38:=b 39:=a 3a:=9 3b:=8 3c:=f 3d:=e 3e:=d 3f:=c 40:=4 41:=5 42:=6 43:=7 44:=0 45:=1 46:=2 47:=3 48:=c 49:=d 4a:=e 4b:=f 4c:=8 4d:=9 4e:=a 4f:=b 50:=5 51:=4 52:=7 53:=6 54:=1 55:=0 56:=3 57:=2 58:=d 59:=c 5a:=f 5b:=e 5c:=9 5d:=8 5e:=b 5f:=a 60:=6 61:=7 62:=4 63:=5 64:=2 65:=3 66:=0 67:=1 68:=e 69:=f 6a:=c 6b:=d 6c:=a 6d:=b 6e:=8 6f:=9 70:=7 71:=6 72:=5 73:=4 74:=3 75:=2 76:=1 77:=0 78:=f 79:=e 7a:=d 7b:=c 7c:=b 7d:=a 7e:=9 7f:=8 80:=8 81:=9 82:=a 83:=b 84:=c 85:=d 86:=e 87:=f 88:=0 89:=1 8a:=2 8b:=3 8c:=4 8d:=5 8e:=6 8f:=7 90:=9 91:=8 92:=b 93:=a 94:=d 95:=c 96:=f 97:=e 98:=1 99:=0 9a:=3 9b:=2 9c:=5 9d:=4 9e:=7 9f:=6 a0:=a a1:=b a2:=8 a3:=9 a4:=e a5:=f a6:=c a7:=d a8:=2 a9:=3 aa:=0 ab:=1 ac:=6 ad:=7 ae:=4 af:=5 b0:=b b1:=a b2:=9 b3:=8 b4:=f b5:=e b6:=d b7:=c b8:=3 b9:=2 ba:=1 bb:=0 bc:=7 bd:=6 be:=5 bf:=4 c0:=c c1:=d c2:=e c3:=f c4:=8 c5:=9 c6:=a c7:=b c8:=4 c9:=5 ca:=6 cb:=7 cc:=0 cd:=1 ce:=2 cf:=3 d0:=d d1:=c d2:=f d3:=e d4:=9 d5:=8 d6:=b d7:=a d8:=5 d9:=4 da:=7 db:=6 dc:=1 dd:=0 de:=3 df:=2 e0:=e e1:=f e2:=c e3:=d e4:=a e5:=b e6:=8 e7:=9 e8:=6 e9:=7 ea:=4 eb:=5 ec:=2 ed:=3 ee:=0 ef:=1 f0:=f f1:=e f2:=d f3:=c f4:=b f5:=a f6:=9 f7:=8 f8:=7 f9:=6 fa:=5 fb:=4 fc:=3 fd:=2 fe:=1 ff:=0 
 $(foreach i,$(-xor-pairs),$(eval --bxor$(i)))
+
+###### $(call bit-and,_num1_,_num2_)
+## Binary and between _num1_ and _num2_.
+## Examples:
+## % `$(call bit-and,0xff,0x55)` -> `0x55`
+## % `$(call bit-and,0xf0,0x55)` -> `0x50`
+## % `$(call bit-and,077,0255)` -> `055`
+## % `$(call bit-and,255,0x12)` -> `18`
 bit-and = $(call -bit-and,$(call -analyze,$1),$(call -analyze,$2),$(findstring -,$1),$(findstring -,$2))
 -bit-and = $(call --bit-and,$(call -$(firstword $1)to16,$(call -xpld-$(firstword $1),$(call -nrmlz,$(lastword $1)))),$(call -$(firstword $2)to16,$(call -xpld-$(firstword $2),$(call -nrmlz,$(lastword $2)))),$3,$4,$(firstword $1))
 --bit-and = $(call -fmt$5,$(call -16to$5,$(foreach i,$(call -sgnxt-merge,$(if $3,$(call -twoscompl16,$1),$1),$(if $4,$(call -twoscompl16,$2),$2),$3,$4),$(--band$(i)))))
+
+###### $(call bit-or,_num1_,_num2_)
+## Binary or between _num1_ and _num2_.
+## Examples:
+## % `$(call bit-or,128,127)` -> `255`
 bit-or = $(call -bit-or,$(call -analyze,$1),$(call -analyze,$2),$(findstring -,$1),$(findstring -,$2))
 -bit-or = $(call --bit-or,$(call -$(firstword $1)to16,$(call -xpld-$(firstword $1),$(call -nrmlz,$(lastword $1)))),$(call -$(firstword $2)to16,$(call -xpld-$(firstword $2),$(call -nrmlz,$(lastword $2)))),$3,$4,$(firstword $1))
 --bit-or = $(call -fmt$5,$(call -16to$5,$(foreach i,$(call -sgnxt-merge,$(if $3,$(call -twoscompl16,$1),$1),$(if $4,$(call -twoscompl16,$2),$2),$3,$4),$(--bor$(i)))))
+
+###### $(call bit-xor,_num1_,_num2_)
+## Binary xor between _num1_ and _num2_.
+## Examples:
+## % `$(call bit-xor,0xAA,0x55)` -> `0xff`
 bit-xor = $(call -bit-xor,$(call -analyze,$1),$(call -analyze,$2),$(findstring -,$1),$(findstring -,$2))
 -bit-xor = $(call --bit-xor,$(call -$(firstword $1)to16,$(call -xpld-$(firstword $1),$(call -nrmlz,$(lastword $1)))),$(call -$(firstword $2)to16,$(call -xpld-$(firstword $2),$(call -nrmlz,$(lastword $2)))),$3,$4,$(firstword $1))
 --bit-xor = $(call -fmt$5,$(call -16to$5,$(foreach i,$(call -sgnxt-merge,$(if $3,$(call -twoscompl16,$1),$1),$(if $4,$(call -twoscompl16,$2),$2),$3,$4),$(--bxor$(i)))))
 
+###### $(call bit-not,_num_)
+## Binary inversion of number _num_. Does not produce a constant size
+## 2's complement because there is no word-width, but fills up to the
+## highest hexadecimal numeral.
+## Examples:
+## % `$(call bit-not,0x187)` -> `0xe78`
+## % `$(call bit-not,-0x88)` -> `0x87`
+## % `$(call bit-not,301)` -> `3794`
+## % `$(call bit-not,0xffff)` -> `0x0`
 bit-not = $(call -bit-not,$(call -analyze,$1),$(findstring -,$1))
 -bit-not = $(call --bit-not,$(call -$(firstword $1)to16,$(call -xpld-$(firstword $1),$(call -nrmlz,$(lastword $1)))),$2,$(firstword $1))
 --bit-not = $(call -fmt$3,$(call -16to$3,$(call -onescompl16,$(if $2,$(call -twoscompl16,$1),$1))))
@@ -1058,8 +1042,19 @@ bit-not = $(call -bit-not,$(call -analyze,$1),$(findstring -,$1))
 ## Calculate _num1+num2_. Both arguments are signed integers.
 ## Numeric bases can be mixed, the result is given in the same base as _num1_.
 ## Examples:
-## - `$(call add,-1,0)` --> `-1`
-## - `$(call add,0x12,13)` --> `0x1f`
+## % `$(call add,-1,0)` --> `-1`
+## % `$(call add,0x12,13)` --> `0x1f`
+# % `$(call add,12,-10)` -> `2`
+# % `$(call add,0x12,-0x10)` -> `0x2`
+# % `$(call add,012,017)` -> `031`
+# % `$(call add,-12,10)` -> `-2`
+# % `$(call add,-0x12,-0x10)` -> `-0x22`
+# % `$(call add,-0x12,0x0001e)` -> `0xc`
+# % `$(call add,012,-10)` -> `00`
+# % `$(call add,0x12,-010)` -> `0xa`
+# % `$(call add,12,017)` -> `27`
+# % `$(call add,-12,0x10)` -> `4`
+# % `$(call add,-0x1,01)` -> `0x0`
 add = $(call -add,$(call -analyze,$1),$(call -analyze,$2),$(findstring -,$1)v$(findstring -,$2))
 -add = $(call --add$3,$(call -xpld-$(firstword $1),$(call -nrmlz,$(lastword $1))),$(call -$(firstword $2)to$(firstword $1),$(call -xpld-$(firstword $2),$(call -nrmlz,$(lastword $2)))),$(firstword $1))
 --addv = $(call -fmt$3,$(call -add$3,$(call -shift-merge,$1,$2)))
@@ -1072,8 +1067,19 @@ add = $(call -add,$(call -analyze,$1),$(call -analyze,$2),$(findstring -,$1)v$(f
 ## Calculate _num1-num2_. Both arguments are signed integers.
 ## Numeric bases can be mixed, the result is given in the same base as _num1_.
 ## Examples:
-## - `$(call sub,12,-10)` --> `22`
-## - `$(call sub,012,-10)` --> `024`
+## % `$(call sub,12,-10)` --> `22`
+## % `$(call sub,012,-10)` --> `024`
+# % `$(call sub,12,-10)` -> `22`
+# % `$(call sub,0x12,-0x10)` -> `0x22`
+# % `$(call sub,012,017)` -> `-05`
+# % `$(call sub,-12,10)` -> `-22`
+# % `$(call sub,-0x12,-0x10)` -> `-0x2`
+# % `$(call sub,-0x12,0x0001e)` -> `-0x30`
+# % `$(call sub,012,-10)` -> `024`
+# % `$(call sub,0x12,-010)` -> `0x1a`
+# % `$(call sub,12,017)` -> `-3`
+# % `$(call sub,-12,0x10)` -> `-28`
+# % `$(call sub,-0x1,-01)` -> `0x0`
 sub = $(call -sub,$(call -analyze,$1),$(call -analyze,$2),$(findstring -,$1)v$(findstring -,$2))
 -sub = $(call --sub$3,$(call -xpld-$(firstword $1),$(call -nrmlz,$(lastword $1))),$(call -$(firstword $2)to$(firstword $1),$(call -xpld-$(firstword $2),$(call -nrmlz,$(lastword $2)))),$(firstword $1))
 --subv = $(if $(findstring <,$(-ucmp)),$(call -fmt$3,$(call -sub$3,$(call -shift-merge,$2,$1)),-),$(call -fmt$3,$(call -sub$3,$(call -shift-merge,$1,$2))))
@@ -1086,8 +1092,17 @@ sub = $(call -sub,$(call -analyze,$1),$(call -analyze,$2),$(findstring -,$1)v$(f
 ## Compare _num1 with num2_ and emit the characters `<`,`>` or `=`. Both arguments
 ## are signed integers. Numeric bases can be mixed.
 ## Examples:
-## - `$(call cmp,12,-14)` --> `>`
-## - `$(call cmp,012,10)` --> `=`
+## % `$(call cmp,12,-14)` --> `>`
+## % `$(call cmp,012,10)` --> `=`
+# % `$(call cmp,0,0)` -> `=`
+# % `$(call cmp,1,0)` -> `>`
+# % `$(call cmp,-1,0)` -> `<`
+# % `$(call cmp,-123,123)` -> `<`
+# % `$(call cmp,-123,-122)` -> `<`
+# % `$(call cmp,123,122)` -> `>`
+# % `$(call cmp,-123,-123)` -> `=`
+# % `$(call cmp,123,123)` -> `=`
+# % `$(call cmp,123,-123)` -> `>`
 cmp = $(call -cmp,$(call -analyze,$1),$(call -analyze,$2),$(findstring -,$1)v$(findstring -,$2))
 -cmp = $(call --cmp$3,$(call -xpld-$(firstword $1),$(call -nrmlz,$(lastword $1))),$(call -$(firstword $2)to$(firstword $1),$(call -xpld-$(firstword $2),$(call -nrmlz,$(lastword $2)))),$(firstword $1))
 --cmpv = $(-ucmp)
@@ -1104,9 +1119,54 @@ cmp = $(call -cmp,$(call -analyze,$1),$(call -analyze,$2),$(findstring -,$1)v$(f
 ## Both arguments are signed integers. Numeric bases can be mixed. The result can
 ## be used in an $(if ) expression.
 ## Examples:
-## - `$(call int-ge,12,-14)` --> `>`
-## - `$(call int-le,12,-14)` --> `` (empty string)
-## - `$(if $(call int-eq,012,10),equal,not equal)` --> `equal`
+## % `$(call int-ge,12,-14)` --> `>`
+## % `$(call int-le,12,-14)` --> `` (empty string)
+## % `$(call int-lt,1,0)` -> ``
+## % `$(call int-gt,-123,-122)` -> ``
+## % `$(if $(call int-eq,012,10),equal,not equal)` --> `equal`
+# % `$(call int-le,0,0)` -> `=`
+# % `$(call int-le,1,0)` -> ``
+# % `$(call int-le,-1,0)` -> `<`
+# % `$(call int-le,-123,123)` -> `<`
+# % `$(call int-le,-123,-122)` -> `<`
+# % `$(call int-le,123,122)` -> ``
+# % `$(call int-le,-123,-123)` -> `=`
+# % `$(call int-le,123,123)` -> `=`
+# % `$(call int-le,123,-123)` -> ``
+# % `$(call int-lt,0,0)` -> ``
+# % `$(call int-lt,-1,0)` -> `<`
+# % `$(call int-lt,-123,123)` -> `<`
+# % `$(call int-lt,-123,-122)` -> `<`
+# % `$(call int-lt,123,122)` -> ``
+# % `$(call int-lt,-123,-123)` -> ``
+# % `$(call int-lt,123,123)` -> ``
+# % `$(call int-lt,123,-123)` -> ``
+# % `$(call int-ge,0,0)` -> `=`
+# % `$(call int-ge,1,0)` -> `>`
+# % `$(call int-ge,-1,0)` -> ``
+# % `$(call int-ge,-123,123)` -> ``
+# % `$(call int-ge,-123,-122)` -> ``
+# % `$(call int-ge,123,122)` -> `>`
+# % `$(call int-ge,-123,-123)` -> `=`
+# % `$(call int-ge,123,123)` -> `=`
+# % `$(call int-ge,123,-123)` -> `>`
+# % `$(call int-gt,0,0)` -> ``
+# % `$(call int-gt,1,0)` -> `>`
+# % `$(call int-gt,-1,0)` -> ``
+# % `$(call int-gt,-123,123)` -> ``
+# % `$(call int-gt,123,122)` -> `>`
+# % `$(call int-gt,-123,-123)` -> ``
+# % `$(call int-gt,123,123)` -> ``
+# % `$(call int-gt,123,-123)` -> `>`
+# % `$(call int-eq,0,0)` -> `=`
+# % `$(call int-eq,1,0)` -> ``
+# % `$(call int-eq,-1,0)` -> ``
+# % `$(call int-eq,-123,123)` -> ``
+# % `$(call int-eq,-123,-122)` -> ``
+# % `$(call int-eq,123,122)` -> ``
+# % `$(call int-eq,-123,-123)` -> `=`
+# % `$(call int-eq,123,123)` -> `=`
+# % `$(call int-eq,123,-123)` -> ``
 int-le = $(filter < =,$(cmp))
 int-lt = $(filter <,$(cmp))
 int-ge = $(filter > =,$(cmp))
@@ -1118,9 +1178,26 @@ int-eq = $(filter =,$(cmp))
 ## Multiply integer _num1_ with integer _num2_. Both arguments can be signed.
 ## Numeric bases can be mixed, the result is given in the same base as _num1_.
 ## Examples:
-## - `$(call mul,-1,0)` --> `0`
-## - `$(call mul,-0x1,0)` --> `0x0`
-## - `$(call mul,03,-7)` --> `-025`
+## % `$(call mul,0x12313,0x456)` -> `0x4ee1462`
+## % `$(call mul,123,456)` -> `56088`
+# % `$(call mul,1,456)` -> `456`
+# % `$(call mul,999,111)` -> `110889`
+# % `$(call mul,-999,111)` -> `-110889`
+# % `$(call mul,999,-111)` -> `-110889`
+# % `$(call mul,0,-1)` -> `0`
+# % `$(call mul,999,999)` -> `998001`
+# % `$(call mul,12313,456)` -> `5614728`
+# % `$(call mul,0xfff,0xfff)` -> `0xffe001`
+# % `$(call mul,0x12313,0x456)` -> `0x4ee1462`
+# % `$(call mul,012313,0456)` -> `06103572`
+# % `$(call mul,123,0x456)` -> `136530`
+# % `$(call mul,01,456)` -> `0710`
+# % `$(call mul,0x999,111)` -> `0x42957`
+# % `$(call mul,-999,0111)` -> `-72927`
+# % `$(call mul,999,-111)` -> `-110889`
+# % `$(call mul,-1,0)` --> `0`
+# % `$(call mul,-0x1,0)` --> `0x0`
+# % `$(call mul,03,-7)` --> `-025`
 mul = $(call -mul,$(call -analyze,$1),$(call -analyze,$2),$(subst --,,$(findstring -,$1)$(findstring -,$2)))
 -mul = $(call -fmt$(firstword $1),$(call -mul$(firstword $1),$(call -xpld-$(firstword $1),$(call -nrmlz,$(lastword $1))),$(call -$(firstword $2)to$(firstword $1),$(call -xpld-$(firstword $2),$(call -nrmlz,$(lastword $2))))),$3)
 
@@ -1129,19 +1206,34 @@ mul = $(call -mul,$(call -analyze,$1),$(call -analyze,$2),$(subst --,,$(findstri
 ## Divide integer _num1_ by integer _num2_. Both arguments can be signed.
 ## Numeric bases can be mixed, the result is given in the same base as _num1_.
 ## Examples:
-## - `$(call div,9876543210,0x13)` --> `519818063`
-## - `$(call div,0x9876543210,16)` --> `0x987654321`
+## % `$(call div,9876543210,0x13)` -> `519818063`
+## % `$(call div,0x9876543210,16)` -> `0x987654321`
+# % `$(call div,6771813460,11691912)` -> `579`
+# % `$(call div,9464867202,52687268)` -> `179`
+# % `$(call div,-7201636450,95165808)` -> `-75`
 div = $(call -div,$(call -analyze,$1),$(call -analyze,$2),$(findstring -,$1)$(findstring -,$2))
 -div = $(subst --,,$3)$(call -fmt$(firstword $1),$(call -10to$(firstword $1),$(call -div10,$(call -$(firstword $1)to10,$(call -xpld-$(firstword $1),$(call -nrmlz,$(lastword $1)))),$(call -$(firstword $2)to10,$(call -xpld-$(firstword $2),$(call -nrmlz,$(lastword $2)))))))
--div10 = $(call -div10-1,$1,$2,$(wordlist $(words _ $2),$(words $1),$(-all-0)))
+#-div10 = $(call -div10-1,$1,$2,$(wordlist $(words _ $2),$(words $1),$(-all-0)))
 
 #----------------------------------------------------------------------
+###### $(call mod,_num1_,_num2_)
+## Calculate modulo operation (division rest) of _num1_ divided by _num2_.
+## Examples:
+## % `$(call mod,0x3f,16)` -> `0xf`
+## % `$(call mod,077,16)` -> `017`
+## % `$(call mod,0x1234,0x100)` -> `0x34`
+## % `$(call mod,12345678,4321)` -> `581`
 mod = $(call -mod,$(call -analyze,$1),$(call -analyze,$2),$(findstring -,$1)$(findstring -,$2))
 -mod = $(subst --,,$3)$(call -fmt$(firstword $1),$(call -10to$(firstword $1),$(call -mod10,$(call -$(firstword $1)to10,$(call -xpld-$(firstword $1),$(call -nrmlz,$(lastword $1)))),$(call -$(firstword $2)to10,$(call -xpld-$(firstword $2),$(call -nrmlz,$(lastword $2)))))))
 -mod10 = $(call -sub10,$(call -shift-merge,$1,$(call -mul10,$(call -div10,$1,$2),$2)))
 
 #----------------------------------------------------------------------
-# Negate a number
+###### $(call neg,_num_)
+## Negate the number _num_ by inverting the sign. Positive is denoted
+## by no sign, negative by `-`. Does *not* work with `+`!
+## Examples:
+## % `$(call neg,0x123)` -> `-0x123`
+## % `$(call neg,-123)` -> `123`
 neg = $(if $(findstring -,$1),$(subst -,,$1),-$1)
 
 #----------------------------------------------------------------------
@@ -1154,6 +1246,14 @@ to-dec = $(call -to-dec,$(call -analyze,$1),$(findstring -,$1))
 
 #----------------------------------------------------------------------
 # Return a number zero extended to the given number of places. The sign gets dropped.
+## % `$(call zero-ext,0x123,8)` -> `00000123`
+## % `$(call zero-ext,0x123,3)` -> `123`
+## % `$(call zero-ext,0x123,1)` -> `123`
+## % `$(call zero-ext,0x123,0)` -> `123`
+## % `$(call zero-ext,0x123)` -> `123`
+## % `$(call zero-ext,0x000123,8)` -> `00000123`
+## % `$(call zero-ext,0x000123,1)` -> `123`
+## % `$(call zero-ext,0x000123)` -> `123`
 zero-ext = $(call -zero-ext,$(call -nrmlz,$(lastword $(call -analyze,$1))),$(or $2,0))
 -zero-ext = $(subst $(space),,$(wordlist $(words _ $(call -xpld-16,$1)),$2,$(-all-0)))$1
 
@@ -1312,11 +1412,11 @@ pick = $(foreach elem,$1,$(word $(elem),$2))
 ## the result list with its column count, you have a new gmtt table)
 ##
 ## Exapmle:
-## - `test-tbl := 4   foo bar baz 11    foo bar baf 22   faa bar baz 33`
-## - `$(call select,3 1 2 3,$(test-tbl),$$(call str-match,$$1,%oo))` --> `baz foo bar baz baf foo bar baf`
+## % `$(eval test-tbl := 4   foo bar baz 11    foo bar baf 22   faa bar baz 33)` --> ``
+## % `$(call select,3 1 2 3,$(test-tbl),$$(call str-match,$$1,%oo))` --> `baz foo bar baz baf foo bar baf`
 ## The same can be achieved, if we use a function as where clause:
-## - `ends-in-oo = $(call str-match,$1,%oo)`
-## - `$(call select,3 1 2 3,$(test-tbl),$$(call ends-in-oo,$$1))` --> `baz foo bar baz baf foo bar baf`
+## % `$(eval ends-in-oo = $(call str-match,$1,%oo))` -> ``
+## % `$(call select,3 1 2 3,$(test-tbl),$$(call ends-in-oo,$$1))` --> `baz foo bar baz baf foo bar baf`
 select = $(strip $(call -select,$1,$(strip $2),$3))
 -select = $(call --select,$(wordlist 2,2147483647,$2),$(firstword $2),$(call add,$(firstword $2),1),$1,$3)
 --select = $(if $1,$(if $(call exec,$5,$(call list2param,$(wordlist 1,$2,$1))), $(call pick,$4,$1))$(call --select,$(wordlist $3,2147483647,$1),$2,$3,$4,$5))
@@ -1345,8 +1445,8 @@ map-select = $(strip $(call -map-select,$1,$(strip $2),$3,$4))
 ## The order of the tables is preserved.
 ##
 ## Examples:
-## - `$(call join-tbl,1 one two,2 first 1st second 2nd third 3rd)` --> `3 one first 1st two second 2nd one third 3rd`
-## - `$(call join-tbl,2 one apple two oranges,1 1st 2nd 3rd,NIL)` --> `3 one apple 1st two oranges 2nd NIL NIL 3rd`
+## % `$(call join-tbl,1 one two,2 first 1st second 2nd third 3rd)` --> `3 one first 1st two second 2nd one third 3rd`
+## % `$(call join-tbl,2 one apple two oranges,1 1st 2nd 3rd,NIL)` --> `3 one apple 1st two oranges 2nd NIL NIL 3rd`
 join-tbl = $(call add,$(word 1,$1),$(word 1,$2)) $(call -join-tbl,$(call -chop-rec,$(wordlist 2,2147483647,$1),$(word 1,$1)),$(call -chop-rec,$(wordlist 2,2147483647,$2),$(word 1,$2)),$(if $3,$(subst $(space),$(-separator),$(call n-list,$3,$(word 1,$1)))),$(if $3,$(subst $(space),$(-separator),$(call n-list,$3,$(word 1,$2)))))
 -join-tbl = $(call --join-tbl,$1,$2,$(call sub,$(words $1),$(words $2)),$3,$4)
 --join-tbl = $(if $(findstring -,$3),$(call ---join-tbl,$1 $(call n-list,$(or $4,$1),$(subst -,,$3)),$2),$(if $(subst 0,,$3),$(call ---join-tbl,$1,$2 $(call n-list,$(or $5,$2),$3)),$(call ---join-tbl,$1,$2)))
@@ -1392,12 +1492,12 @@ while = $(if $(call exec,$1),$(eval $2)$(call while,$1,$2,$3),$(eval $3))
 ## the makefile. Verbosity is additive, *not* hierarchical, i.e. `VERBOSITY=9` will not effect the output
 ## of all warnings/info-strings from level 0 to 9 but only for level 9. 
 ## Examples:
-## - `VERBOSITY = 0`
-## - `$(call verbose,warninglevel 0,warninglevel 1,warninglevel 2,info 1,info 2,info 3)` -> `warninglevel 0`
-## - `VERBOSITY = 2`
-## - `$(call verbose,warninglevel 0,warninglevel 1,warninglevel 2,info 1,info 2,info 3)` -> `warninglevel 2`
-## - `VERBOSITY = 012345`
-## - `$(call verbose,warninglevel 0,warninglevel 1,warninglevel 2,info 1,info 2,info 3)` -> `warninglevel 0 warninglevel 1 warninglevel 2 info 1 info 2 info 3`
+## % `VERBOSITY = 0`
+## % `$(call verbose,warninglevel 0,warninglevel 1,warninglevel 2,info 1,info 2,info 3)` -> `warninglevel 0`
+## % `VERBOSITY = 2`
+## % `$(call verbose,warninglevel 0,warninglevel 1,warninglevel 2,info 1,info 2,info 3)` -> `warninglevel 2`
+## % `VERBOSITY = 012345`
+## % `$(call verbose,warninglevel 0,warninglevel 1,warninglevel 2,info 1,info 2,info 3)` -> `warninglevel 0 warninglevel 1 warninglevel 2 info 1 info 2 info 3`
 verbose = $(if $(VERBOSITY),$(info $(-verbose)))
 -verbose = $(if $(findstring 0,$(VERBOSITY)),$1 )$(if $(findstring 1,$(VERBOSITY)),$2 )$(if $(findstring 2,$(VERBOSITY)),$3 )$(if $(findstring 3,$(VERBOSITY)),$4 )$(if $(findstring 4,$(VERBOSITY)),$5 )$(if $(findstring 5,$(VERBOSITY)),$6 )$(if $(findstring 6,$(VERBOSITY)),$7 )$(if $(findstring 7,$(VERBOSITY)),$8 )$(if $(findstring 8,$(VERBOSITY)),$9 )$(if $(findstring 9,$(VERBOSITY)),$(10) )
 
@@ -1555,5 +1655,5 @@ kill-anchored-rept = $(call -kill-anchored-rept,$1,$(call kill-many-anchored-rep
 
 #----------------------------------------------------------------------
 #$(call -gmtt-test,$$(call f,x),y)
--gmtt-test = $(if $(call -compare-result,$(call exec,$1),$2),$(info Ok: $1 = $2),$(info Test failed: $1 = $(call exec,$1), should be: $2))
+-gmtt-test = $(if $(call -compare-result,$(call exec,$1),$2),$(info Ok: $1 = $2),$(info Test failed: $1 = <$(call exec,$1)>, should be: <$2>))
 -compare-result = $(call str-eq,$(strip $1),$(strip $2))

@@ -1438,10 +1438,8 @@ select = $(strip $(call -select,$1,$(strip $2),$3))
 # $3 = "where-clause", function of $4 parameters returning true (non-null) or false (empty string)
 # $4 = a function which processes a list containing the selection from $3 on each iteration of the select
 # returns: a list of columns (selection in $2) from the rows in table $1 where condition $3 is non-null
-map-select = $(strip $(call -map-select,$1,$(strip $2),$3,$4))
--map-select = $(call --map-select,$(wordlist 2,2147483647,$2),$(firstword $2),$(call add,$(firstword $2),1),$1,$3,$4)
---map-select = $(if $1,$(if $(call exec,$5,$(call list2param,$(wordlist 1,$2,$1))), $(call exec,$6,$(call list2param,$(call pick,$4,$1))))$(call --map-select,$(wordlist $3,2147483647,$1),$2,$3,$4,$5,$6))
-
+map-select = $(call -map-select,$(wordlist 2,2147483647,$2),$(firstword $2),$(call decimal-inc,$(firstword $2)),$1,$3,$4)
+-map-select = $(if $1,$(if $(call exec,$5,$(call list2param,$(wordlist 1,$2,$1))),$(call exec,$6,$(call list2param,$(call pick,$4,$1))))$(call -map-select,$(wordlist $3,2147483647,$1),$2,$3,$4,$5,$6))
 
 #----------------------------------------------------------------------
 ###### $(call join-tbl,_table1_,table2_[,_NIL-value_])

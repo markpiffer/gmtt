@@ -190,12 +190,21 @@ $(eval -match-chars := $(-match-chars-q))
 -rpt2pN = $(call --rpt2pN,$1,$(wordlist 1,$2, _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _))
 
 #----------------------------------------------------------------------
-###### $(call n-list,_string_,_number-of-repetitions_)
-## Create a list with exactly _number-of-repetitions_ copies of a _string_.
-## % `$(call n-list,foo,13)` --> `foo foo foo foo foo foo foo foo foo foo foo foo foo`
-#n-list = $(call -n-list,$1,$(call rev-list,$(call -xpld-10,$2)))
-#-n-list = $(foreach i,$(wordlist 1,$(or $(firstword $2),0),1 2 3 4 5 6 7 8 9),$1) $(if $(word 2,$2),$(call -n-list,$1 $1 $1 $1 $1 $1 $1 $1 $1 $1,$(wordlist 2,32,$2)))
+###### $(call n-list,_string_,_length_)
+## Create a list of copies of the _string_ up to exactly _length_ elements.
+## If the string has more space-separated components it will be cut.
+## % `$(call n-list,foo bar,5)` --> `foo bar foo bar foo`
 n-list = $(if $(word $2,$1),$(wordlist 1,$2,$1),$(call n-list,$1 $1,$2))
+
+#----------------------------------------------------------------------
+###### $(call repeat-list,_list_,_number-of-repetitions_)
+## Create a list with exactly _number-of-repetitions_ verbatim (i.e. space-preserving)
+## copies of the given _list_ (or string).
+## % `$(call repeat,foo bar,5)` --> `foo barfoo barfoo barfoo barfoo bar`
+## % `$(call repeat,foo bar ,5)` --> `foo bar foo bar foo bar foo bar foo bar `
+repeat = $(call -repeat,$1,$(call rev-list,$(call -xpld-10,$2)))
+-repeat = $(call --repeat,$1,$(firstword $2),$(wordlist 2,12,$2))
+--repeat = $(if $(findstring 0,$2),,$(if $(findstring 1,$2),$1,$(if $(findstring 2,$2),$1$1,$(if $(findstring 3,$2),$1$1$1,$(if $(findstring 4,$2),$1$1$1$1,$(if $(findstring 5,$2),$1$1$1$1$1,$(if $(findstring 6,$2),$1$1$1$1$1$1,$(if $(findstring 7,$2),$1$1$1$1$1$1$1,$(if $(findstring 8,$2),$1$1$1$1$1$1$1$1,$1$1$1$1$1$1$1$1$1)))))))))$(if $3,$(call --repeat,$1$1$1$1$1$1$1$1$1$1,$(firstword $3),$(wordlist 2,12,$3)))
 
 #----------------------------------------------------------------------
 ###### $(call dec-list,_number-of-elements_)

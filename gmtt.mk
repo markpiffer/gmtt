@@ -263,6 +263,35 @@ lpad = $(call implode,$(wordlist $(words _ $(call explode,$([alnum]),$1)),$2,$(c
 ## % `$(call lstrip,0xABCD,0x)` --> `ABCD`
 lstrip = $(patsubst $2%,%,$1)
 
+
+# Extract balanced string
+# For a string  of the form "prefix((a(b)c((d(e))f))g)postfix"
+# return the prefix (if present) and the first completely balanced parenthesed expression.
+# If there are fewer closing than opening symbols, the whole string is returned.
+# $1 - string
+# $2 - opening symbol
+# $3 - closing symbol
+first-balanced = $(call -first-balanced,$(patsubst $2%$3,$2% $3,$(subst $3,$3 ,$(subst $2, $2,$1))),$2,$3)
+-first-balanced = $(if $(findstring $2,$(firstword $1)),,$(firstword $1))$(call --first-balanced,$(if $(findstring $2,$(firstword $1)),$1,$(wordlist 2,2147483647,$1)),$2,$3,$(patsubst $2%,$2,$(patsubst %$3,$3,$(if $(findstring $2,$(firstword $1)),$1,$(wordlist 2,2147483647,$1)))))
+--first-balanced = $(call ---first-balanced,$1,$2,$3,$(subst $2 $3,._._,$(wordlist 2,$(words $4),_ $4) $3))
+---first-balanced = $(if $(findstring $2,$(firstword $4)),$(call ---first-balanced,$1,$2,$3,$(patsubst $2.%_$3,.%_._._,$(subst _ .,_.,$(subst $2 .,$2.,$(subst _ $3,_$3,$4)))) $3),$(call ----first-balanced,$1,$(subst ., ,$(firstword $4))))
+----first-balanced = $(subst $(space),,$(wordlist 1,$(words $2),$1))
+
+first-balanced-spc = $(subst $(-separator),$(newline),$(subst $(-spacereplace),$(space),$(call first-balanced,$(subst $(space),$(-spacereplace),$(subst $(newline),$(-separator),$1)),$2,$3)))
+
+#$(info $(call first-balanced,oaeu[a[ab[ab[a][a[x]e][x]]][[a]ab]b]oue[a][b[c]][a[]b]aoe ,[,]))
+
+#define str
+#       if (it != _dev2Objs.end()) { somefunc();
+#            // A device already exists, release global lock immediately ...
+#            main.release();
+#        }
+#	exit(0);
+#endef
+
+#$(info $(call first-balanced-spc,$(str),$(lparen),$(rparen)))
+#$(info $(call first-balanced-spc,$(str),{,}))
+
 #----------------------------------------------------------------------
 ###### $(call str-eq,_string1_,_string2_)
 ## Compare two strings on equality. Strings are allowed to have blanks.
